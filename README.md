@@ -5,8 +5,13 @@
 
 ## Naive Bayes Formulation 
 
+![](figs/Naive_Bayes_formulation.png)
 
 ## Naive Bayes MLE formulation 
 The following extact shows the log-likelihood formulation for the Multinomial Naive Bayes model 
 
 ![](figs/MultinomialNB_MLE_formulation.jpg)
+
+## Naive Bayes is a linear classifier 
+
+![](figs/Naive_Bayes_Linear.png)
