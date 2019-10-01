@@ -4,6 +4,7 @@
 - https://www.overleaf.com/6192466927dckyydkjvmct
 
 ## Naive Bayes Formulation 
+See https://sklearn.org/modules/naive_bayes.html
 
 ![](figs/Naive_Bayes_formulation.png)
 
@@ -14,4 +15,4 @@ The following extact shows the log-likelihood formulation for the Multinomial Na
 
 ## Naive Bayes is a linear classifier 
 
-![](figs/Naive_Bayes_Linear.png)
+![](figs/Naive_Bayes_Linear.jpg)
