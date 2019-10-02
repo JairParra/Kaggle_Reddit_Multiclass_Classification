@@ -4,7 +4,7 @@
 ## IMPORTANT/ANNOUNCEMENTS:  
 - Waiting for Group registration on MyCourses 
 - Waiting for Kaggle registration after group registration on MyCourses (using MyCourses group name and mcgill emails) 
-- Meeting today (Wed, Oct 2 on MyCourses)
+- Meeting today (Wed, Oct 2 on MyCourses) at Burnside Basement, 5:30pm
 
 ## Our paper: 
 - https://www.overleaf.com/6192466927dckyydkjvmct
