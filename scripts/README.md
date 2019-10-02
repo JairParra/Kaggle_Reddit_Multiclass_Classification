@@ -6,7 +6,10 @@
 - Informal tests should **not** be included in main
 
 ## main.py
-- Data pre-processing, calls to Bernoulli_NB and all the rest goes here. If the script becomes too big, or if we decide to implement some other extra class, we might create it in a different step. 
+- Calls to Bernoulli_NB , testing all the other models and all the Scikit-learn packages or whatever go here. If the script becomes too big, or if we decide to implement some other extra class, we might create it in a different step. 
+
+## data_preprocessing.py 
+- As it name indicates, this script is dedicated solely to clean the data. 
 
 ## Bernoulli_NB.py 
 - Implementation of the Bernoulli Naive Bayes model as a class. 
