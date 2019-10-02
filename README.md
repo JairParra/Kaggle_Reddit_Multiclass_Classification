@@ -12,6 +12,7 @@
 ## IMPORTANT/ANNOUNCEMENTS:  
 - Waiting for Group registration on MyCourses 
 - Waiting for Kaggle registration after group registration on MyCourses (using MyCourses group name and mcgill emails) 
+- nltk/spacy basic usage &  preprocessing tutorial ready at "notebooks"
 
 ## TASKS: 
 - Workload division; please update accordingly. 
