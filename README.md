@@ -15,7 +15,7 @@
 - nltk/spacy basic usage &  preprocessing tutorial ready at "notebooks"
 
 ## TASKS: 
-- Workload division; please update accordingly. 
+-The following are the task divisions. These will be updated accordingly. 
 
 ### Jair: 
 - Finish uploadin the nltk/spacy tutorials and setting up. **done**
