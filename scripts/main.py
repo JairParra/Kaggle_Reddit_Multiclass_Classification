@@ -24,20 +24,31 @@ Created on Wed Oct  2 16:26:34 2019
 
 #### 1. Imports ### 
 
-import re 
-import pandas as pd
+import re
+import nltk 
+import random 
 import numpy as np 
-import matplotlib.pyplot as plt 
+import pandas as pd 
 import seaborn as sns
-from tqdm import tqdm # to display progress bar
+import matplotlib.pyplot as plt 
+from tqdm import tqdm
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer
+from nltk.stem.snowball import SnowballStemmer
+from sklearn.model_selection import train_test_split 
+from sklearn.feature_extraction.text import CountVectorizer 
+from sklearn.feature_extraction.text import TfidfTransformer
+from sklearn.preprocessing import Normalizer 
+from sklearn.pipeline import Pipeline
+from sklearn.svm import LinearSVC
+from sklearn.naive_bayes import BernoulliNB, MultinomialNB
+from sklearn.linear_model import LogisticRegression 
+from sklearn.model_selection import RandomizedSearchCV 
+from sklearn.metrics import classification_report 
+from sklearn.metrics import accuracy_score, confusion_matrix 
 
-# *****************************************************************************
-
-### 2. Reading and cleaning the data ### 
-
-
-
-
+# *******************************************************************************
 
 
 
