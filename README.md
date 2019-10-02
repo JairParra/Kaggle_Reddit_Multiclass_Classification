@@ -15,6 +15,25 @@
 - Meeting today (Wed, Oct 2 on MyCourses) at Burnside Basement, 5:30pm
 - Learn how to use: nltk, spacy, gensim, sci-kit learn functions and pipeline, etc. 
 
+## TASKS: 
+- Workload division; please update accordingly. 
+
+### Jair: 
+- Finish uploadin the nltk/spacy tutorials and setting up.
+- Naive Bayes implementatio (compatible with sklearn). 
+
+## Ashray: 
+- Get to know how to use nltk, spacy, re 
+- Figure out how to apply the preprocessing steps
+- If there are any other cleaning steps, feel free to apply them and document them (what does it do, why this cleaning step) 
+- Implement a function with parameters for the cleaning 
+
+## Hamza: 
+- Get to know how to use nltk, spacy, re 
+- Figure out how to apply the preprocessing steps
+- If there are any other cleaning steps, feel free to apply them and document them (what does it do, why this cleaning step) 
+- Implement a function with parameters for the cleaning 
+
 ## Our paper: 
 - https://www.overleaf.com/6192466927dckyydkjvmct
 
