@@ -10,6 +10,7 @@
 - The basic implementation idea goes as follows: 
   - i. Get the clean data  
   - ii. Apply the ```Pipeline``` described below. 
+  - iii. CV_search 
   
 ### Pipeline 
 
@@ -25,6 +26,9 @@ Where:
 
 ## data_preprocessing.py 
 - As it name indicates, this script is dedicated solely to clean the data, up to a format that sklearn can understand, and process. 
+- Note that some of the preprocessing actually goes along main (since it's more convenient for sklearn),  but we keep these separeated since it makes part of the Pipeline. 
 
 ## Bernoulli_NB.py 
 - Implementation of the Bernoulli Naive Bayes model as a class. 
+- Functions will be briefly dscribed below as implementation progresses 
+
