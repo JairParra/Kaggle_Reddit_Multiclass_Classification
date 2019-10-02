@@ -1,3 +1,8 @@
+[![Generic badge](https://img.shields.io/badge/<Reddit_Classification>-<Building>-<COLOR>.svg)](https://shields.io/)
+[![GitHub version](https://badge.fury.io/gh/Naereen%2FStrapDown.js.svg)](https://github.com/Naereen/StrapDown.js)
+
+
+
 # Mini-Project 2: Kaggle Reddit multi-class classification
 - Project for implmenting multi-output classification of reddit data. 
 
