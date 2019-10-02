@@ -6,7 +6,7 @@
 
 
 # Mini-Project 2: Kaggle Reddit multi-class classification
-- Project for implmenting multi-output classification of reddit data. 
+- Project for implementing multi-output classification of reddit data. 
 
 ## IMPORTANT/ANNOUNCEMENTS:  
 - Waiting for Group registration on MyCourses 
