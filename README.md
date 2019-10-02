@@ -1,5 +1,6 @@
 [![Generic badge](https://img.shields.io/badge/Reddit_Classification-Building-<COLOR>.svg)](https://shields.io/)
-[![GitHub version](https://badge.fury.io/gh/Naereen%2FStrapDown.js.svg)](https://github.com/Naereen/StrapDown.js)
+[![Generic badge](https://img.shields.io/badge/Contributors-2-<COLOR>.svg)](https://shields.io/)
+
 
 
 
