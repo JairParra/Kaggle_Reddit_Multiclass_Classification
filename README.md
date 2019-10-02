@@ -18,8 +18,8 @@
 - Workload division; please update accordingly. 
 
 ### Jair: 
-- Finish uploadin the nltk/spacy tutorials and setting up.
-- Naive Bayes implementatio (compatible with sklearn). 
+- Finish uploadin the nltk/spacy tutorials and setting up. **done**
+- Naive Bayes implementation (compatible with sklearn). 
 
 ## Ashray: 
 - Get to know how to use nltk, spacy, re 
