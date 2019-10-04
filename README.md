@@ -13,9 +13,9 @@
 - **Don't forget** to start registration on Kaggle 
 - nltk/spacy basic usage &  preprocessing tutorial ready at "notebooks" 
 - Ideally, we would like to have data pre-processing, Naive bayes implementation, 
-as well as a fitted Pipeline with results by **next wednseday** We will then use the rest of the time 
+as well as a fitted Pipeline with results by **next wednesday** We will then use the rest of the time 
 to polish up and write-up the project. 
-- Meeting after class on **Wednesday**
+- Short meeting after class on **Monday** to discuss progress.
 
 
 ## TASKS: 
