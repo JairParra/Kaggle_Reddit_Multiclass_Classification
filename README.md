@@ -4,7 +4,6 @@
 [![Generic badge](https://img.shields.io/badge/Neat_level-OVER_8000-green.svg)](https://shields.io/)
 
 
-
 # Mini-Project 2: Kaggle Reddit multi-class classification
 - Project for implementing multi-output classification of reddit data. 
 
@@ -24,20 +23,16 @@ to polish up and write-up the project.
 ### Jair: 
 - Finish uploadin the nltk/spacy tutorials and setting up. **done**
 - Naive Bayes implementation (compatible with sklearn). **Started, in progress**
+- Data-preprocessing script and outputs. **done**
+- Start implementing classification pipelines. **In progress**
 
 ## Ashray: 
-- Get to know how to use nltk, spacy, re 
-- Figure out how to apply the preprocessing steps
-- If there are any other cleaning steps, feel free to apply them and document them (what does it do, why this cleaning step) 
-- Implement a function with parameters for the cleaning 
-- **Start working on implementing classification pipelines**
+- **Fix Naive Bayes running time issue/ finish implementation of other functions**
+- Start working on implementing classification pipelines
 
 ## Hamza: 
-- Get to know how to use nltk, spacy, re 
-- Figure out how to apply the preprocessing steps
-- If there are any other cleaning steps, feel free to apply them and document them (what does it do, why this cleaning step) 
-- Implement a function with parameters for the cleaning 
-- **Start working on implementing classification pipelines**
+- **Fix Naive Bayes running time issue/ finish implementation of other functions**
+- Start working on implementing classification pipelines
 
 ## Our paper: 
 - https://www.overleaf.com/6192466927dckyydkjvmct
