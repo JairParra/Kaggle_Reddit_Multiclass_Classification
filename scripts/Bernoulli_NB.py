@@ -48,8 +48,8 @@ class BernoulliNaiveBayes():
     # Changes will be made to fit the actual model 
     
     def __init__(self,X=np.array([[0]]), y=np.array([0]), alpha=1.0, 
-                 fit_prior=True, one_hot_encode = False,  binarize=False, 
-                 class_prior=np.array([0]), fit=True): 
+                 fit_prior=True,  fit_params=False, binarize=False, 
+                 class_prior=np.array([0]), ): 
         """
         X: (n x m) matrix of features with n observations 
          and m features. (in np matrix format)
@@ -59,8 +59,9 @@ class BernoulliNaiveBayes():
             - Features must be binary inputs
         """     
         
-        self.binarize = binarize
+        self.binarize = binarize # parameter to binarize the input 
         
+        # if the model receives text input
         if self.binarize: 
             try: 
                 # count vectorizer approach 
@@ -95,27 +96,11 @@ class BernoulliNaiveBayes():
             self.class_counts = sorted([count for count in counter.items()], key=lambda x: x[0])# list of (count)
             self.class_prior = [freq/self.n for label, freq in self.class_counts] # fit prior probabilities for each class 
             
+                    
             
-        self.K = len(self.class_counts) # number of classes
-        self.params = np.zeros((self.m, self.K)) # (m parameters x K classes)
-        
-        # fit parameters if necessary 
-        if fit: 
-            # transform to pd format 
-            X = pd.DataFrame(self.X) 
-            y = pd.DataFrame(self.y) 
-            
-            # for each class 
-            for k in self.classes_:
-                # obtain count of y=k for that class 
-                print("class {}".format(k))
-            
-            X = np.array(X)
-            y = np.array(y)
-                
         if self.X[0,0] == 0 and self.y[0] == 0: 
             print("Default initialization") 
-            print("Initialized with dimensions\n X:({}) y:({})".format(self.X.shape, self.y.shape)) 
+            print("Initialized with dimensions\n X:{} y:{}".format(self.X.shape, self.y.shape)) 
             print("Number of features: m={}".format(self.m)) 
             print("Number of observations: n={}".format(self.n)) 
             print("Class priors:\n {}".format(self.class_prior))
@@ -123,23 +108,70 @@ class BernoulliNaiveBayes():
             print("Classes:\n {}".format(self.classes_))
         
         else: 
-            print("Initialized with dimensions\n X:({}) y:({})".format(self.X.shape, self.y.shape)) 
+            print("Initialized with dimensions\n X:{} y:{}".format(self.X.shape, self.y.shape)) 
             print("Number of features: m={}".format(self.m)) 
             print("Number of observations: n={}".format(self.n)) 
             print("Class priors:\n {}".format(self.class_prior))
             print("Class counts:\n {}".format(self.class_counts))
             print("Classes:\n {}".format(self.classes_))
-
+            
+            
+        self.K = len(self.class_counts) # number of classes
+        self.params = np.zeros((self.m, self.K)) # (m parameters x K classes)
         
+        # fit parameters if call is made
+        if fit_params: 
+            
+            self.fit_params()
+                       
+        
+    def fit_params(self): 
+        
+        # transform to pd format 
+        print("X self shape = {}".format(self.X.shape))
+        print("type: ", type(self.X))
+                    
+        X = self.X
+        y = self.y 
+        
+        print("X shape = {}".format(X.shape))
+        print("y_shape {}".format(y.shape))
+        
+        # for each class 
+        for k in self.classes_:
+            # obtain count of y=k for that class 
+            n = self.class_counts[k][1]
+            # display counts
+            print("class {}, count ={}".format(k,n)) 
+            
+            # for each feature
+            for j in range(self.m): 
+                
+                summation = 0 # initialize summation 
+                
+                # for each observation 
+                for i in range(self.n): 
+                    
+                    # if word j of observation i appears and its label is k 
+                    if X[i,j] == 1 and y[i] == k: 
+                        summation += 1 # increase the summation 
+                        
+                self.params[j,k] = summation 
+                        
+                            
     def sigmoid(self, z): 
         return 1/(1+ np.exp(-z))
         
     
-    def fit(self, X, y, fit_prior=True, class_prior=np.array([0]), binarize=False, verbose=False): 
+    def fit(self, X, y, fit_prior=True, class_prior=np.array([0]), 
+            binarize=False, fit_params=True, verbose=False): 
         """ 
         Initializes the model with given parameters
         """
         self.__init__(X,y, fit_prior=fit_prior, class_prior=class_prior, binarize=binarize) # Initialize with input 
+        
+        if fit_params: 
+            self.fit_params() 
         
         
     def transform_parameters(self, tranformer): 
@@ -176,11 +208,83 @@ class BernoulliNaiveBayes():
         
         
 # ********************************************************************************       
+
+import re        
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer
+from nltk.stem.snowball import SnowballStemmer 
+
+    
+### 3. Data Preprocessing ### 
+ 
+# Re-assign tokenizer 
+tokenizer = word_tokenize
+    
+# Initialize English Snowball stemmer 
+stemmer = SnowballStemmer(language='english')    
+
+# Re-assign lemmatizer 
+lemmatizer = WordNetLemmatizer()
+
+# Obtain English stopwords 
+stopwords = set(stopwords.words('english'))
+
+# Ex. 
+stemmer.stem("Cats")
+lemmatizer.lemmatize("corpora")
+
+def preprocess_text(sentence, stem=False, lemmatize=False): 
+    """
+    Cleans text list by applying the following steps: 
+        1. Tokenize the input sentence 
+        2. Remove punctuation, symbols and unwanted characters
+        3. Convert the tokens to lowercase 
+        4. Stem or lemmatize (according to input)
+        5. Remove stopwords and empty strings
+    """
+    # Tokenize
+    tokens = tokenizer(sentence) 
+    
+    # Remove punctuation & symbols
+    tokens = [re.sub(r"[^a-zA-Z]","", token) for token in tokens ]
+    
+    # convert to lowercase 
+    tokens = [token.lower() for token in tokens]
+    
+    # Stem or lemmatize
+    if stem: 
+        tokens = [stemmer.stem(token) for token in tokens] 
+    if lemmatize:
+        tokens = [lemmatizer.lemmatize(token) for token in tokens] 
+    
+    # remove stopwords and empty strings 
+    tokens = [token for token in tokens if token not in stopwords
+              and len(token) > 1] 
+    
+    return ' '.join(tokens)
+
+
+def preprocess_texts(text_list, stem=False, lemmatize=False): 
+    """ 
+    Applies preprocess text on a list of texts. 
+    """ 
+    return [preprocess_text(text, stem=stem, lemmatize=lemmatize) for text in text_list] 
+    
+
+# Ex. with tokenization 
+preprocess_text("This is a sentence, it isn't a cake!! @@ .", stem=True) 
+""" Out[25]: 'sentenc nt cake' """ 
+
+
+
+# ******************************************************************************       
+        
         
 ### TESTS ### 
 
-
 # Temporary imports for testing purposes 
+
 
 
 from sklearn.naive_bayes import BernoulliNB # SkLearn model to compare 
@@ -192,17 +296,24 @@ from sklearn.datasets import fetch_20newsgroups
 from sklearn.metrics import classification_report 
 
 
+
+
+
 newsgroups = fetch_20newsgroups(subset='all') # data to test 
 X_train, X_test, y_train, y_test = train_test_split(newsgroups.data, 
                                                     newsgroups.target,
                                                     train_size=0.8, 
                                                     test_size=0.2)
 
+X_train = preprocess_texts(X_train, lemmatize=True) # this thing will be slow 
+
+
 
 # convert to count vectors
 count_vect = CountVectorizer().fit(X_train) # fit input data 
-X_train_counts = count_vect.transform(X_train) # get train counts
+X_train_counts = count_vect.transform(X_train)# get train counts
 X_test_counts = count_vect.transform(X_test) # get test counts
+
 
 # apply tfidf 
 tfidf_transformer = TfidfTransformer().fit(X_train_counts)
@@ -248,11 +359,19 @@ nb.transform_parameters(TfidfTransformer) # yesss
 nb.transform_parameters(Normalizer)
 
 
-
-
 X = nb.X[0:100,0:100].toarray()
 X = nb.X[0:1000][100] # can access this way  
 print(X)
 
 
 mat = np.zeros((10,10))
+
+type(mat)
+
+
+mat = pd.DataFrame(mat)
+
+
+print(type(X_train_counts))
+
+
