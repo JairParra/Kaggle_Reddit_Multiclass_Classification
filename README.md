@@ -41,4 +41,6 @@ to polish up and write-up the project.
 See https://sklearn.org/modules/naive_bayes.html
 https://www.cs.ubc.ca/~murphyk/Teaching/CS340-Fall07/NB.pdf
 
+![](figs/Bernoulli_NB.png)
+
 ![](figs/Naive_Bayes_formulation.png)
