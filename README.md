@@ -14,7 +14,7 @@
 as well as a fitted Pipeline with results by **next wednesday** We will then use the rest of the time 
 to polish up and write-up the project. 
 - Short meeting after class on **Monday** to discuss progress.
-- Please check `issues`
+- Please check `issues`, consult 
 
 
 ## TASKS: 
