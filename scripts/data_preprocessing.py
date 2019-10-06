@@ -60,8 +60,8 @@ real_X_test = data_test_raw['comments']
 # The data is randomly shuffled before splitting. 
 X_train, X_test, y_train, y_test = train_test_split(X_train, 
                                                      y_train, 
-                                                     train_size=0.9, 
-                                                     test_size=0.1, 
+                                                     train_size=0.95, 
+                                                     test_size=0.05, 
                                                      shuffle=True, 
                                                      random_state=42)
 
@@ -135,6 +135,7 @@ preprocess_text("This is a sentence, it isn't a cake!! @@ .", stem=True)
 # Apply preprocessing to featture train and test sets 
 X_train = preprocess_texts(X_train)
 X_test = preprocess_texts(X_test) 
+real_X_test = preprocess_texts(real_X_test) 
 
 
 ## 3.2 Classes encoding 
@@ -153,7 +154,9 @@ f = lambda x: label_to_num[x]
 y_train = [f(label) for label in y_train]
 y_test = [f(label) for label in y_test]
 
-
+# convert mapping to a table and save
+labels_df = pd.DataFrame(zip(label_to_num))
+labels_df.to_csv('../data_clean/labels.txt')
 
 
 ## 3.3 Save the clean data 
@@ -168,6 +171,11 @@ with open('../data_clean/X_test.txt','w') as file:
         file.write(line + "\n")
     file.close()
     
+with open('../data_clean/real_X_test.txt','w') as file: 
+    for line in real_X_test: 
+        file.write(line + "\n")
+    file.close()
+    
 with open('../data_clean/y_train.txt','w') as file: 
     for line in y_train: 
         file.write(str(line) + "\n")
@@ -178,4 +186,4 @@ with open('../data_clean/y_test.txt','w') as file:
         file.write(str(line) + "\n")
     file.close()
     
-    
+        
