@@ -44,3 +44,6 @@ https://www.cs.ubc.ca/~murphyk/Teaching/CS340-Fall07/NB.pdf
 ![](figs/Bernoulli_NB.png)
 
 ![](figs/Naive_Bayes_formulation.png)
+
+## Dataset labels distribution  
+![](figs/labels_countplot.png)
