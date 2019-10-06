@@ -26,11 +26,11 @@ to polish up and write-up the project.
 - Data-preprocessing script and outputs. **done**
 - Start implementing classification pipelines. **In progress**
 
-## Ashray: 
+### Ashray: 
 - **Fix Naive Bayes running time issue/ finish implementation of other functions**
 - Start working on implementing classification pipelines
 
-## Hamza: 
+### Hamza: 
 - **Fix Naive Bayes running time issue/ finish implementation of other functions**
 - Start working on implementing classification pipelines
 
