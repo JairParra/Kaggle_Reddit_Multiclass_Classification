@@ -162,7 +162,7 @@ df_cm = pd.DataFrame(confusion_mat, index=tags,
                      columns=tags) 
 plt.figure(2, figsize= (15,15)) 
 sns.heatmap(df_cm, annot=True, fmt='g') 
-plt.title("Multinomial NB Confussion matrix")
+plt.title("Multinomial NB Confusion matrix")
 plt.savefig('../figs/Multinomial NB Confussion matrix.png')
 
 # *******************************************************************************

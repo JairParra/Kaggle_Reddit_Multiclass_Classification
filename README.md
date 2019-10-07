@@ -15,7 +15,7 @@ as well as a fitted Pipeline with results by **next wednesday** We will then use
 to polish up and write-up the project. 
 - Short meeting after class on **Monday** to discuss progress.
 - Please check `issues`, consult  
-- Our current best current classifier is **Multinomial Naive Bayes** and it's only accuracte to likt 54% , which is utterly crap. We need to think of better features as well as perform hyperparameter tunning. 
+- Our current best current classifier is **Multinomial Naive Bayes** and it's only accuracte to like 54% , which is utterly crap. We need to think of better features as well as perform hyperparameter tunning. 
 
 
 ## TASKS: 
@@ -31,6 +31,7 @@ to polish up and write-up the project.
 ### Ashray: 
 - **Fix Naive Bayes running time issue/ finish implementation of other functions**
 - Start working on improving classification pipelines and parameter Grid Parameter search
+- Make kaggle group and join competiton (done)
 
 ### Hamza: 
 - **Fix Naive Bayes running time issue/ finish implementation of other functions**
