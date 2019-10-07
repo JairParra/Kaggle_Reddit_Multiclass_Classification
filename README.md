@@ -26,6 +26,7 @@ to polish up and write-up the project.
 - Naive Bayes implementation (compatible with sklearn). **Started, in progress**
 - Data-preprocessing script and outputs. **done**
 - Start implementing classification pipelines. **In progress**
+- get added to the kaggle group (give ashray your username)
 
 ### Ashray: 
 - **Fix Naive Bayes running time issue/ finish implementation of other functions**
@@ -34,6 +35,7 @@ to polish up and write-up the project.
 ### Hamza: 
 - **Fix Naive Bayes running time issue/ finish implementation of other functions**
 - Start working on improving classification pipelines and parameter Grid Parameter search 
+- get added to the kaggle group (give ashray your username)
 
 ## Our paper: 
 - https://www.overleaf.com/6192466927dckyydkjvmct
