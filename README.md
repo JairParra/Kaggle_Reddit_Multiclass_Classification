@@ -8,7 +8,7 @@
 - Project for implementing multi-output classification of reddit data. 
 
 ## IMPORTANT/ANNOUNCEMENTS:  
-- **Don't forget** to start registration on Kaggle 
+- **Don't forget** to start registration on Kaggle https://www.kaggle.com/t/cbd6c7bc66394bd682983a6daeefe759
 - nltk/spacy basic usage &  preprocessing tutorial ready at "notebooks" 
 - Ideally, we would like to have data pre-processing, Naive bayes implementation, 
 as well as a fitted Pipeline with results by **next wednesday** We will then use the rest of the time 
