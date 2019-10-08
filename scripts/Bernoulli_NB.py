@@ -9,10 +9,10 @@ Created on Wed Oct  2 16:26:34 2019
 @ Hair Albeiro Parra Barrera 
 @ ID: 260738619 
 
-@ Ashray Malleshachari
+@ Ashray Mallesh
 @ ID: 260838256
     
-@ Hamza Rizwan
+@ Hamza Khan
 @ ID: 
 """
 
@@ -34,9 +34,8 @@ import seaborn as sns # easier & prettier visualization
 from tqdm import tqdm # to display progress bar
 from numpy import transpose as T # because it is a pain in the ass
 from collections import Counter # to count classes 
+from sklearn.feature_extraction.text import CountVectorizer 
 
-
-from sklearn.preprocessing import OneHotEncoder # will convert to a matrix of one-hot encoded vectors
 
 
 # *****************************************************************************
@@ -48,12 +47,12 @@ class BernoulliNaiveBayes():
     # Changes will be made to fit the actual model 
     
     def __init__(self,X=np.array([[0]]), y=np.array([0]), alpha=1.0, 
-                 fit_prior=True,  fit_params=False, binarize=False, 
+                 fit_prior=True,  fit=False, binarize=False, 
                  class_prior=np.array([0]), ): 
         """
         X: (n x m) matrix of features with n observations 
          and m features. (in np matrix format)
-        y: (n x 1) vector of targets (as Series)
+        y: (n x 1) vector of numeric targets (as Series)
         
         NOTE: 
             - Features must be binary inputs
@@ -120,7 +119,7 @@ class BernoulliNaiveBayes():
         self.params = np.zeros((self.m, self.K)) # (m parameters x K classes)
         
         # fit parameters if call is made
-        if fit_params: 
+        if fit: 
             
             self.fit_params()
                        
@@ -138,11 +137,11 @@ class BernoulliNaiveBayes():
         print("y_shape {}".format(y.shape))
         
         # for each class 
-        for k in self.classes_:
+        for k in tqdm(self.classes_):
             # obtain count of y=k for that class 
             n = self.class_counts[k][1]
             # display counts
-            print("class {}, count ={}".format(k,n)) 
+            print("class {}, count ={}\n".format(k,n)) 
             
             # for each feature
             for j in range(self.m): 
@@ -153,9 +152,10 @@ class BernoulliNaiveBayes():
                 for i in range(self.n): 
                     
                     # if word j of observation i appears and its label is k 
-                    if X[i,j] == 1 and y[i] == k: 
+                    if X[i,j] != 0 and y[i] == k: 
                         summation += 1 # increase the summation 
                         
+                # assign the value 
                 self.params[j,k] = summation 
                         
                             
@@ -210,11 +210,14 @@ class BernoulliNaiveBayes():
 # ********************************************************************************       
 
 import re        
+import spacy
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.stem.snowball import SnowballStemmer 
 
+# Initialize spaCy's English model 
+nlp = spacy.load('es_core_news_md')
     
 ### 3. Data Preprocessing ### 
  
@@ -232,7 +235,8 @@ stopwords = set(stopwords.words('english'))
 
 # Ex. 
 stemmer.stem("Cats")
-lemmatizer.lemmatize("corpora")
+lemmatizer.lemmatize("corpora")   
+    
 
 def preprocess_text(sentence, stem=False, lemmatize=False): 
     """
@@ -285,29 +289,72 @@ preprocess_text("This is a sentence, it isn't a cake!! @@ .", stem=True)
 
 # Temporary imports for testing purposes 
 
-
-
-from sklearn.naive_bayes import BernoulliNB # SkLearn model to compare 
-from sklearn.model_selection import train_test_split 
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer 
 from sklearn.preprocessing import Normalizer
-from sklearn.datasets import fetch_20newsgroups 
-from sklearn.metrics import classification_report 
 
 
+# load raw training  data 
+data_train_raw = pd.read_csv('../data_raw/reddit_train.csv').drop('id',axis=1) 
 
+# load raw testing data 
+data_test_raw = pd.read_csv('../data_raw/reddit_train.csv').drop('id', axis=1)
 
+# obtain train and test data  
+X_train = data_train_raw['comments'] 
+y_train = data_train_raw['subreddits']
 
-newsgroups = fetch_20newsgroups(subset='all') # data to test 
-X_train, X_test, y_train, y_test = train_test_split(newsgroups.data, 
-                                                    newsgroups.target,
-                                                    train_size=0.8, 
-                                                    test_size=0.2)
+X_test = data_test_raw['comments']
+y_test=  data_test_raw['subreddits'] 
 
+# list of targets 
+targets = sorted(set(y_train))
+
+# perprocess the texts 
 X_train = preprocess_texts(X_train, lemmatize=True) # this thing will be slow 
 
 
+# obtain labels mapping
+labels = sorted(set(y_train)) 
+label_to_num = { label:i for i, label in enumerate(labels)}
+num_to_label = { i:label for i, label in enumerate(labels)}
+
+# function to map 
+f = lambda x: label_to_num[x]
+
+# map every string label to its respective number 
+y_train = pd.Series([f(label) for label in y_train])
+y_test = pd.Series([f(label) for label in y_test])
+
+# *****************************************************************************
+
+### Model Tests ### 
+
+# use just a portion for testing whether the model is actually doing anything at all 
+X_slice = X_train[0:100]
+y_slice = y_train[0:100]
+
+nb = BernoulliNaiveBayes() # initialize the model 
+nb.fit(X_slice, y_slice, binarize=True, fit_params=True) # binarize and fit parameters
+nb.transform_parameters(TfidfTransformer) # transform parameters 
+nb.transform_parameters(Normalizer) # transform again  
+nb.fit_params() # fit parameters again  
+print(nb.class_counts) # display class counts 
+params = nb.params # observe the parameters matrix. 
+
+
+# Note nb.X is a sparse matrix!!! 
+X_slice = nb.X[0:100,0:100].toarray() # This will conver to array, but if too big, RIP memory 
+y_slice = nb.y[0:100] # slice 
+X = nb.X[0:1000][100] # can access this way  
+print(type(nb.X)) # sparse matrix 
+
+
+# *****************************************************************************
+
+## The following code shows how to apply the different transformers, 
+# This is what is happening inside the Bernoulli NB class. 
+# Just for demonstration, this part will be remouved. 
 
 # convert to count vectors
 count_vect = CountVectorizer().fit(X_train) # fit input data 
@@ -324,54 +371,5 @@ X_test_tfidf = tfidf_transformer.transform(X_test_counts)
 normalizer_transformer = Normalizer().fit(X=X_train_tfidf)
 X_train_normalized = normalizer_transformer.transform(X_train_tfidf)
 X_test_normalized = normalizer_transformer.transform(X_test_tfidf)
-
-
-# This is how you should fit the model 
-clf = BernoulliNB().fit(X_train_normalized, y_train)
-
-
-# Obtain metrics
-y_pred = clf.predict(X_test_normalized)
-report = classification_report(y_test,y_pred, 
-                               target_names=newsgroups.target_names)
-
-print(report)
-
-
-# obtain a list of unique classes
-
-classes = sorted(set(y_train))
-
-count_classes = Counter(y_train) # instantiate Counter object 
-
-counts = sorted([count for count in count_classes.items()], key=lambda x: x[0])
-print(counts)
-print(len(counts))
-
-
-# *****************************************************************************
-
-### Model Tests ### 
-
-nb = BernoulliNaiveBayes() 
-nb.fit(X_train, y_train, binarize=True)
-nb.transform_parameters(TfidfTransformer) # yesss
-nb.transform_parameters(Normalizer)
-
-
-X = nb.X[0:100,0:100].toarray()
-X = nb.X[0:1000][100] # can access this way  
-print(X)
-
-
-mat = np.zeros((10,10))
-
-type(mat)
-
-
-mat = pd.DataFrame(mat)
-
-
-print(type(X_train_counts))
 
 
