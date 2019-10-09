@@ -52,6 +52,6 @@ https://www.cs.ubc.ca/~murphyk/Teaching/CS340-Fall07/NB.pdf
 ## Dataset labels distribution  
 ![](figs/labels_countplot.png)
 
-## Current Best Model: Scikit-learn Multinomial NB (52.9571 %)
+## Current Best Model: Scikit-learn Multinomial NB (53.1714 %)
 
 ![](figs/Multinomial_NB_Confussion_matrix.png)
