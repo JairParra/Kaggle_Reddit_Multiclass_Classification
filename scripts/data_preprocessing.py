@@ -33,9 +33,9 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm # to display progress bar
 from nltk.corpus import stopwords as stw
 from nltk.tokenize import word_tokenize
-from nltk.stem import WordNetLemmatizer
 from nltk.stem.snowball import SnowballStemmer
 from sklearn.model_selection import train_test_split 
+from sklearn.model_selection import ShuffleSplit
 
 sns.set()
 
@@ -46,33 +46,50 @@ nlp = spacy.load('en_core_web_lg')
 
 # *****************************************************************************
 
-### 2. Reading, preprocessing and statistics ### 
+### 2. Reading the data ### 
 
 # load raw training and test data 
 data_train_raw = pd.read_csv('../data_raw/reddit_train.csv').drop('id',axis=1) 
 data_test_raw = pd.read_csv('../data_raw/reddit_test.csv').drop('id', axis=1)
 
 # split into appropriate groups  
-X_train_raw = data_train_raw['comments'] 
-y_train_raw = data_train_raw['subreddits']
+real_X_train = data_train_raw['comments'] 
+real_y_train = data_train_raw['subreddits']
 
 # ******* NOTE!!!! ******* 
 real_X_test = data_test_raw['comments']
 # real_y_test doesn't exist!!!! 
 
+
+## 2.1 Stastics
+    
+# Label distribution plot
+plt.figure(figsize=(20,10))
+sns.countplot(real_y_train)
+plt.savefig('../figs/labels_countplot.png')
+
+# ******* NOTE!!!! *******
 # Since we want to actually test using a trianing and testing set, but we don't 
 # have the labels for the test set, we will further split into our own train/test
 # sets for now. 
+
+# Therefore, we will also split another model which is the full preprocessed 
+# training dataset. Then, we will output predictions with it, and these will be 
+# the ones we will submit. 
 # ******* NOTE!!!! *******
 
-    
+
+## 2.2 Splitting the artifical data 
+
 # The data is randomly shuffled before splitting. 
-X_train, X_test, y_train, y_test = train_test_split(X_train_raw, 
-                                                     y_train_raw, 
+X_train, X_test, y_train, y_test = train_test_split(real_X_train, 
+                                                     real_y_train, 
                                                      train_size=0.9, 
                                                      test_size=0.1, 
                                                      shuffle=True, 
                                                      random_state=42)
+
+# *****************************************************************************
 
 ### 3. Data Preprocessing ### 
 
@@ -111,7 +128,6 @@ def preprocess_texts(texts,
     if verbose: 
         print(texts)
     
-#    docs= nlp.pipe(texts, disable=['ner','textcat','entity_linker', 'entity_ruler' ]) # fit all the texts to the spaCy language model 
     clean_texts = [] # to store the result 
     
     with nlp.disable_pipes('ner'): 
@@ -136,15 +152,19 @@ def preprocess_texts(texts,
             
             if lemma_all: 
                 
-                tokens = [re.sub(r"[^a-zA-Z0-9]","", token.lemma_.lower()) for token in doc if token.pos_ not in filter_tags 
-                          and token.text not in stopwords and token.lemma_ not in stopwords
+                tokens = [re.sub(r"[^a-zA-Z0-9]","", token.lemma_.lower()) for token in doc 
+                          if token.pos_ not in filter_tags 
+                          and token.text not in stopwords 
+                          and token.lemma_ not in stopwords
                           and len(token.lemma_) > 1]
                           
             # apply all preprocessing with stemmin g
             elif stem_all: 
                 
-                tokens = [re.sub(r"[^a-zA-Z0-9]","", stemmer(token.text.lower())) for token in doc if token.pos_ not in filter_tags 
-                          and token.text not in stopwords and token.lemma_ not in stopwords
+                tokens = [re.sub(r"[^a-zA-Z0-9]","", stemmer(token.text.lower())) for token in doc 
+                          if token.pos_ not in filter_tags 
+                          and token.text not in stopwords
+                          and token.lemma_ not in stopwords
                           and len(token.lemma_) > 1 and token.text.isalpha() ]  
                 
             # else consider case by case 
@@ -152,13 +172,15 @@ def preprocess_texts(texts,
                     
                 if stem: 
                     # stem with nltk
-                    tokens = [stemmer(token.text) for token in doc if token.pos_ not in filter_tags
+                    tokens = [stemmer(token.text) for token in doc 
+                              if token.pos_ not in filter_tags
                               and len(token.text) >1 ] 
                     
                 if lemmatize: 
                     # lemmatize with spacy
                     # NOTE: pronouns are lemmatized as "PRON" 
-                    tokens = [token.lemma_ for token in doc if token.pos_ not in filter_tags
+                    tokens = [token.lemma_ for token in doc 
+                              if token.pos_ not in filter_tags
                               and len(token.text) > 1]
                     
                 if lowercase: 
@@ -195,13 +217,14 @@ result = preprocess_texts(sentences,lemma_all = True,filter_tags=tags)
 print(result)
 
 print(len(sentences[1])) 
-print(type(result[0]))
+print(type(result[0])) # type of each item in the list
 # EXAMPLE end
 
 
 # Apply preprocessing to featture train and test sets (SLOW!!!)
 X_train = preprocess_texts(X_train, lemma_all = True,filter_tags=tags)
 X_test = preprocess_texts(X_test, lemma_all = True,filter_tags=tags) 
+real_X_train = preprocess_texts(real_X_train, lemma_all = True, filter_tags=tags)
 real_X_test = preprocess_texts(real_X_test, lemma_all = True,filter_tags=tags) 
 
 # NOTE: If you wish to make any changes, you have to make sure that you re-load the original 
@@ -227,10 +250,6 @@ y_test = [f(label) for label in y_test]
 labels_df = pd.DataFrame(zip(label_to_num))
 labels_df.to_csv('../data_clean/labels.txt')
 
-# Ensure proper data type
-X_train = pd.Series(X_train[0])
-X_test = pd.Series(X_test)
-
 ## 3.3 Save the clean data 
 
 with open('../data_clean/X_train.txt','w', encoding='utf-8') as file: 
@@ -241,12 +260,7 @@ with open('../data_clean/X_train.txt','w', encoding='utf-8') as file:
 with open('../data_clean/X_test.txt','w', encoding='utf-8') as file: 
     for line in X_test: 
         file.write(line + "\n")
-    file.close()
-    
-with open('../data_clean/real_X_test.txt','w', encoding='utf-8') as file: 
-    for line in real_X_test: 
-        file.write(line + "\n")
-    file.close()
+    file.close()    
     
 with open('../data_clean/y_train.txt','w', encoding='utf-8') as file: 
     for line in y_train: 
@@ -258,14 +272,16 @@ with open('../data_clean/y_test.txt','w', encoding='utf-8') as file:
         file.write(str(line) + "\n")
     file.close()
     
-        
-###############################################################################
+# full data
+with open('../data_clean/real_X_train.txt','w', encoding='utf-8') as file: 
+    for line in real_X_train: 
+        file.write(line + "\n")
+    file.close()
     
-### 3. Stastics ### 
-    
-# Label distribution plot
-plt.figure(figsize=(20,10))
-sns.countplot(y_train_raw)
-plt.savefig('../figs/labels_countplot.png')
+with open('../data_clean/real_X_test.txt','w', encoding='utf-8') as file: 
+    for line in real_X_test: 
+        file.write(line + "\n")
+    file.close()
+
 
 
