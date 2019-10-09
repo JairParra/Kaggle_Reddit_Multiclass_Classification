@@ -8,12 +8,10 @@
 - Project for implementing multi-output classification of reddit data. 
 
 ## IMPORTANT/ANNOUNCEMENTS:  
-- **Don't forget** to start registration on Kaggle https://www.kaggle.com/t/cbd6c7bc66394bd682983a6daeefe759
 - nltk/spacy basic usage &  preprocessing tutorial ready at "notebooks" 
 - Ideally, we would like to have data pre-processing, Naive bayes implementation, 
 as well as a fitted Pipeline with results by **next wednesday** We will then use the rest of the time 
 to polish up and write-up the project. 
-- Short meeting after class on **Monday** to discuss progress.
 - Please check `issues`, consult  
 - Our current best current classifier is **Multinomial Naive Bayes** and it's only accuracte to like 54% , which is utterly crap. We need to think of better features as well as perform hyperparameter tunning. 
 
@@ -23,10 +21,8 @@ to polish up and write-up the project.
 
 ### Jair: 
 - Finish uploadin the nltk/spacy tutorials and setting up. **done**
-- Naive Bayes implementation (compatible with sklearn). **Started, in progress**
-- Data-preprocessing script and outputs. **done**
+- Data-preprocessing script and outputs. **in progress**
 - Start implementing classification pipelines. **In progress**
-- get added to the kaggle group (give ashray your username)
 
 ### Ashray: 
 - **Fix Naive Bayes running time issue/ finish implementation of other functions**
