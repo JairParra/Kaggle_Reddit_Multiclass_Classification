@@ -9,10 +9,10 @@ Created on Wed Oct  2 16:26:34 2019
 @ Hair Albeiro Parra Barrera 
 @ ID: 260738619 
 
-@ Ashray Malleshachari
+@ Ashray Mallesh
 @ ID: 260838256
     
-@ Hamza Rizwan
+@ Hamza Khan
 @ ID: 
 """
 
@@ -26,44 +26,70 @@ Created on Wed Oct  2 16:26:34 2019
 
 import re 
 import spacy
+import numpy as np 
 import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt 
 from tqdm import tqdm # to display progress bar
 from nltk.corpus import stopwords as stw
 from nltk.tokenize import word_tokenize
-from nltk.stem import WordNetLemmatizer
 from nltk.stem.snowball import SnowballStemmer
 from sklearn.model_selection import train_test_split 
+from sklearn.model_selection import ShuffleSplit
+
+sns.set()
+
+# intialize large web cropus trained langauge model 
+# loading is a bit slow but it is more powerful 
+nlp = spacy.load('en_core_web_lg')
 
 
 # *****************************************************************************
 
-### 2. Reading, preprocessing and statistics ### 
+### 2. Reading the data ### 
 
 # load raw training and test data 
 data_train_raw = pd.read_csv('../data_raw/reddit_train.csv').drop('id',axis=1) 
 data_test_raw = pd.read_csv('../data_raw/reddit_test.csv').drop('id', axis=1)
 
 # split into appropriate groups  
-X_train = data_train_raw['comments'] 
-y_train = data_train_raw['subreddits']
+real_X_train = data_train_raw['comments'] 
+real_y_train = data_train_raw['subreddits']
 
 # ******* NOTE!!!! ******* 
 real_X_test = data_test_raw['comments']
 # real_y_test doesn't exist!!!! 
 
+
+## 2.1 Stastics
+    
+# Label distribution plot
+plt.figure(figsize=(20,10))
+sns.countplot(real_y_train)
+plt.savefig('../figs/labels_countplot.png')
+
+# ******* NOTE!!!! *******
 # Since we want to actually test using a trianing and testing set, but we don't 
 # have the labels for the test set, we will further split into our own train/test
 # sets for now. 
+
+# Therefore, we will also split another model which is the full preprocessed 
+# training dataset. Then, we will output predictions with it, and these will be 
+# the ones we will submit. 
 # ******* NOTE!!!! *******
 
-    
+
+## 2.2 Splitting the artifical data 
+
 # The data is randomly shuffled before splitting. 
-X_train, X_test, y_train, y_test = train_test_split(X_train, 
-                                                     y_train, 
-                                                     train_size=0.95, 
-                                                     test_size=0.05, 
+X_train, X_test, y_train, y_test = train_test_split(real_X_train, 
+                                                     real_y_train, 
+                                                     train_size=0.9, 
+                                                     test_size=0.1, 
                                                      shuffle=True, 
                                                      random_state=42)
+
+# *****************************************************************************
 
 ### 3. Data Preprocessing ### 
 
@@ -78,65 +104,131 @@ X_train, X_test, y_train, y_test = train_test_split(X_train,
     # Remove bad characters
     # Remove links ??? 
     # remove specific crap 
-
- 
-tokenizer = word_tokenize # Re-assign tokenizer 
+    
+# NOTE: Tags to remove are are follows: 
+    # https://spacy.io/api/annotation
+    
+tags = ["PRON","DET","ADP","PUNCT","CONJ","CCONJ","SCONJ","NUM","SYM","X","PART","SPACE"] # tags to filter 
 stemmer = SnowballStemmer(language='english')   # Initialize English Snowball stemmer 
-lemmatizer = WordNetLemmatizer() # Re-assign lemmatizer 
 stopwords = list(set(stw.words('english'))) # Obtain English stopwords 
+tokenizer = word_tokenize
 
-# Ex. 
-stemmer.stem("Cats")
-lemmatizer.lemmatize("corpora")
 
-def preprocess_text(sentence, stem=False, lemmatize=False): 
-    """
-    Cleans text list by applying the following steps: 
-        1. Tokenize the input sentence 
-        2. Remove punctuation, symbols and unwanted characters
-        3. Convert the tokens to lowercase 
-        4. Stem or lemmatize (according to input)
-        5. Remove stopwords and empty strings
-    """
-    # Tokenize
-    tokens = tokenizer(sentence) 
+def preprocess_texts(texts, 
+                     lemmatize=False,  
+                     stem=False, 
+                     lemma_all=False, 
+                     stem_all=False,
+                     lowercase=True, 
+                     remove_stopwords=True, 
+                     filter_all=True, 
+                     filter_tags=[], 
+                     verbose=False):
     
-    # Remove punctuation & symbols
-    tokens = [re.sub(r"[^a-zA-Z]","", token) for token in tokens ]
+    if verbose: 
+        print(texts)
     
-    # convert to lowercase 
-    tokens = [token.lower() for token in tokens]
+    clean_texts = [] # to store the result 
     
-    # Stem or lemmatize
-    if stem: 
-        tokens = [stemmer.stem(token) for token in tokens] 
-    if lemmatize:
-        tokens = [lemmatizer.lemmatize(token) for token in tokens] 
+    with nlp.disable_pipes('ner'): 
     
-    # remove stopwords and empty strings 
-    tokens = [token for token in tokens if token not in stopwords
-              and len(token) > 1] 
+        for text in tqdm(texts): 
+            
+            doc = nlp(text)
+            
+    #    # for each processed document (text in the input list) 
+    #    for doc in tqdm(docs, desc="Document"): 
+            
+            # To store the final tokens for the given text
+            tokens = []
+            
+            
+            # stem_all or lemma_all will apply: 
+                # 1. stemming/lemmatizing
+                # 2. lowercase 
+                #.3. filter POS tags 
+                # 4. filter stopwords 
+                # 5. remove single letters 
+            
+            if lemma_all: 
+                
+                tokens = [re.sub(r"[^a-zA-Z0-9]","", token.lemma_.lower()) for token in doc 
+                          if token.pos_ not in filter_tags 
+                          and token.text not in stopwords 
+                          and token.lemma_ not in stopwords
+                          and len(token.lemma_) > 1]
+                          
+            # apply all preprocessing with stemmin g
+            elif stem_all: 
+                
+                tokens = [re.sub(r"[^a-zA-Z0-9]","", stemmer(token.text.lower())) for token in doc 
+                          if token.pos_ not in filter_tags 
+                          and token.text not in stopwords
+                          and token.lemma_ not in stopwords
+                          and len(token.lemma_) > 1 and token.text.isalpha() ]  
+                
+            # else consider case by case 
+            else: 
+                    
+                if stem: 
+                    # stem with nltk
+                    tokens = [stemmer(token.text) for token in doc 
+                              if token.pos_ not in filter_tags
+                              and len(token.text) >1 ] 
+                    
+                if lemmatize: 
+                    # lemmatize with spacy
+                    # NOTE: pronouns are lemmatized as "PRON" 
+                    tokens = [token.lemma_ for token in doc 
+                              if token.pos_ not in filter_tags
+                              and len(token.text) > 1]
+                    
+                if lowercase: 
+                    tokens = [token.lower() for token in tokens]
+                    
+                if remove_stopwords: 
+                    tokens = [token for token in tokens if token not in stopwords] 
+                    
+                if filter_all: 
+                    tokens = [token for token in tokens if token.isalpha()]
+                    
+            
+            # after any preprocessing
+            clean_text = ' '.join(tokens)
+            
+            if len(clean_text) <= 2: 
+                clean_text = ' '.join([re.sub(r"[^a-zA-Z0-9]","", token) for token in tokenizer(text)])
+                
+            
+            clean_texts.append(clean_text)  
+            
+    return clean_texts
 
 
-    return ' '.join(tokens)
+# EXAMPLE: 
+sentences = ["""&gt;Oh man. All I know is that if you're story involves you being in 8th grade using MSN messenger then you are not old enough to be able to say "years ago"
+Why not?""", 
+"""👏 United 👏 in 👏 for 👏 Lukaku 👏 T H I C C 👏 and 👏 ready 👏 to 👏 score 👏 goals 👏 Chelsea 👏 still 👏 in 👏 for 👏 him 👏 too 👏 Everton 👏 want 👏 dat 👏 P 👏"""]
+
+ex = [re.sub(r"[^a-zA-Z0-9]","",token) for token in tokenizer(sentences[0])] 
+print(ex)
+
+result = preprocess_texts(sentences,lemma_all = True,filter_tags=tags)
+print(result)
+
+print(len(sentences[1])) 
+print(type(result[0])) # type of each item in the list
+# EXAMPLE end
 
 
-def preprocess_texts(text_list, stem=False, lemmatize=False): 
-    """ 
-    Applies preprocess text on a list of texts. 
-    """ 
-    return [preprocess_text(text, stem=stem, lemmatize=lemmatize) for text in text_list] 
-    
+# Apply preprocessing to featture train and test sets (SLOW!!!)
+X_train = preprocess_texts(X_train, lemma_all = True,filter_tags=tags)
+X_test = preprocess_texts(X_test, lemma_all = True,filter_tags=tags) 
+real_X_train = preprocess_texts(real_X_train, lemma_all = True, filter_tags=tags)
+real_X_test = preprocess_texts(real_X_test, lemma_all = True,filter_tags=tags) 
 
-# Ex. with tokenization 
-preprocess_text("This is a sentence, it isn't a cake!! @@ .", stem=True) 
-""" Out[25]: 'sentenc nt cake' """ 
-
-# Apply preprocessing to featture train and test sets 
-X_train = preprocess_texts(X_train)
-X_test = preprocess_texts(X_test) 
-real_X_test = preprocess_texts(real_X_test) 
-
+# NOTE: If you wish to make any changes, you have to make sure that you re-load the original 
+# data in memory once again. Failing to do so may cause unwanted bugs. 
 
 ## 3.2 Classes encoding 
 
@@ -158,32 +250,38 @@ y_test = [f(label) for label in y_test]
 labels_df = pd.DataFrame(zip(label_to_num))
 labels_df.to_csv('../data_clean/labels.txt')
 
-
 ## 3.3 Save the clean data 
 
-with open('../data_clean/X_train.txt','w') as file: 
+with open('../data_clean/X_train.txt','w', encoding='utf-8') as file: 
     for line in X_train: 
         file.write(line + "\n")
     file.close()
     
-with open('../data_clean/X_test.txt','w') as file: 
+with open('../data_clean/X_test.txt','w', encoding='utf-8') as file: 
     for line in X_test: 
         file.write(line + "\n")
-    file.close()
+    file.close()    
     
-with open('../data_clean/real_X_test.txt','w') as file: 
-    for line in real_X_test: 
-        file.write(line + "\n")
-    file.close()
-    
-with open('../data_clean/y_train.txt','w') as file: 
+with open('../data_clean/y_train.txt','w', encoding='utf-8') as file: 
     for line in y_train: 
         file.write(str(line) + "\n")
     file.close()
     
-with open('../data_clean/y_test.txt','w') as file: 
+with open('../data_clean/y_test.txt','w', encoding='utf-8') as file: 
     for line in y_test: 
         file.write(str(line) + "\n")
     file.close()
     
-        
+# full data
+with open('../data_clean/real_X_train.txt','w', encoding='utf-8') as file: 
+    for line in real_X_train: 
+        file.write(line + "\n")
+    file.close()
+    
+with open('../data_clean/real_X_test.txt','w', encoding='utf-8') as file: 
+    for line in real_X_test: 
+        file.write(line + "\n")
+    file.close()
+
+
+
