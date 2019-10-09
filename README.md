@@ -54,4 +54,4 @@ https://www.cs.ubc.ca/~murphyk/Teaching/CS340-Fall07/NB.pdf
 
 ## Current Best Model: Scikit-learn Multinomial NB (52.9571 %)
 
-![](figs/Multinomial NB Confussion matrix.png)
+![](figs/Multinomial_NB_Confussion_matrix.png)
