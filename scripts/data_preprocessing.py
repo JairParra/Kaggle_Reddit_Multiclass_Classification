@@ -35,7 +35,6 @@ from nltk.corpus import stopwords as stw
 from nltk.tokenize import word_tokenize
 from nltk.stem.snowball import SnowballStemmer
 from sklearn.model_selection import train_test_split 
-from sklearn.model_selection import ShuffleSplit
 
 sns.set()
 
@@ -283,5 +282,8 @@ with open('../data_clean/real_X_test.txt','w', encoding='utf-8') as file:
         file.write(line + "\n")
     file.close()
 
-
+with open('../data_clean/real_y_train.txt','w', encoding='utf-8') as file: 
+    for line in real_y_train: 
+        file.write(line + "\n")
+    file.close()
 
