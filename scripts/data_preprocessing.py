@@ -37,6 +37,7 @@ from nltk.stem.snowball import SnowballStemmer
 from sklearn.model_selection import train_test_split 
 from sklearn.feature_selection import chi2 # to find out most related terms
 
+
 sns.set()
 
 # intialize large web cropus trained langauge model 
@@ -315,9 +316,8 @@ with open('../data_clean/y_test.txt','w', encoding='utf-8') as file:
         file.write(str(line) + "\n")
     file.close()
 
+
 with open('../data_clean/real_y_train.txt','w', encoding='utf-8') as file: 
     for line in real_y_train: 
         file.write(line + "\n")
     file.close()
-
-
