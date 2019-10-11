@@ -299,7 +299,7 @@ with open('../data_clean/real_X_train_STEM.txt','w', encoding='utf-8') as file:
         file.write(line + "\n")
     file.close()
     
-with open('../data_clean/real_X_test.STEM','w', encoding='utf-8') as file: 
+with open('../data_clean/real_X_test_STEM.txt','w', encoding='utf-8') as file: 
     for line in real_X_test_stem: 
         file.write(line + "\n")
     file.close()
@@ -319,4 +319,5 @@ with open('../data_clean/real_y_train.txt','w', encoding='utf-8') as file:
     for line in real_y_train: 
         file.write(line + "\n")
     file.close()
+
 
