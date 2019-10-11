@@ -35,6 +35,8 @@ from nltk.corpus import stopwords as stw
 from nltk.tokenize import word_tokenize
 from nltk.stem.snowball import SnowballStemmer
 from sklearn.model_selection import train_test_split 
+from sklearn.feature_selection import chi2 # to find out most related terms
+
 
 sns.set()
 
@@ -129,14 +131,14 @@ def preprocess_texts(texts,
     
     clean_texts = [] # to store the result 
     
+    # using language model without Named Entity Recognition 
     with nlp.disable_pipes('ner'): 
     
+        # for each text in the input corpus 
         for text in tqdm(texts): 
             
+            # fit the language model 
             doc = nlp(text)
-            
-    #    # for each processed document (text in the input list) 
-    #    for doc in tqdm(docs, desc="Document"): 
             
             # To store the final tokens for the given text
             tokens = []
@@ -155,16 +157,18 @@ def preprocess_texts(texts,
                           if token.pos_ not in filter_tags 
                           and token.text not in stopwords 
                           and token.lemma_ not in stopwords
-                          and len(token.lemma_) > 1]
+                          and len(token.lemma_) > 1 
+                          and token.text.isalpha() ]
                           
             # apply all preprocessing with stemmin g
             elif stem_all: 
                 
-                tokens = [re.sub(r"[^a-zA-Z0-9]","", stemmer(token.text.lower())) for token in doc 
+                tokens = [re.sub(r"[^a-zA-Z0-9]","", stemmer.stem(token.text.lower())) for token in doc 
                           if token.pos_ not in filter_tags 
                           and token.text not in stopwords
                           and token.lemma_ not in stopwords
-                          and len(token.lemma_) > 1 and token.text.isalpha() ]  
+                          and len(token.lemma_) > 1 
+                          and token.text.isalpha() ]  
                 
             # else consider case by case 
             else: 
@@ -220,11 +224,18 @@ print(type(result[0])) # type of each item in the list
 # EXAMPLE end
 
 
-# Apply preprocessing to featture train and test sets (SLOW!!!)
-X_train = preprocess_texts(X_train, lemma_all = True,filter_tags=tags)
-X_test = preprocess_texts(X_test, lemma_all = True,filter_tags=tags) 
-real_X_train = preprocess_texts(real_X_train, lemma_all = True, filter_tags=tags)
-real_X_test = preprocess_texts(real_X_test, lemma_all = True,filter_tags=tags) 
+# Apply LEMMA preprocessing to featture train and test sets (SLOW!!!)
+X_train_lemma = preprocess_texts(X_train, lemma_all = True,filter_tags=tags)
+X_test_lemma = preprocess_texts(X_test, lemma_all = True,filter_tags=tags) 
+real_X_train_lemma = preprocess_texts(real_X_train, lemma_all = True, filter_tags=tags)
+real_X_test_lemma = preprocess_texts(real_X_test, lemma_all = True,filter_tags=tags) 
+
+# Apply STEM preprocessing to all of these 
+X_train_stem = preprocess_texts(X_train, stem_all = True,filter_tags=tags)
+X_test_stem = preprocess_texts(X_test, stem_all = True,filter_tags=tags) 
+real_X_train_stem = preprocess_texts(real_X_train, stem_all = True, filter_tags=tags)
+real_X_test_stem = preprocess_texts(real_X_test, stem_all = True,filter_tags=tags) 
+
 
 # NOTE: If you wish to make any changes, you have to make sure that you re-load the original 
 # data in memory once again. Failing to do so may cause unwanted bugs. 
@@ -249,8 +260,9 @@ y_test = [f(label) for label in y_test]
 labels_df = pd.DataFrame(zip(label_to_num))
 labels_df.to_csv('../data_clean/labels.txt')
 
-## 3.3 Save the clean data 
+## 3.3 Save the clean data  
 
+# LEMMATIZED
 with open('../data_clean/X_train.txt','w', encoding='utf-8') as file: 
     for line in X_train: 
         file.write(line + "\n")
@@ -259,19 +271,8 @@ with open('../data_clean/X_train.txt','w', encoding='utf-8') as file:
 with open('../data_clean/X_test.txt','w', encoding='utf-8') as file: 
     for line in X_test: 
         file.write(line + "\n")
-    file.close()    
+    file.close()  
     
-with open('../data_clean/y_train.txt','w', encoding='utf-8') as file: 
-    for line in y_train: 
-        file.write(str(line) + "\n")
-    file.close()
-    
-with open('../data_clean/y_test.txt','w', encoding='utf-8') as file: 
-    for line in y_test: 
-        file.write(str(line) + "\n")
-    file.close()
-    
-# full data
 with open('../data_clean/real_X_train.txt','w', encoding='utf-8') as file: 
     for line in real_X_train: 
         file.write(line + "\n")
@@ -281,9 +282,42 @@ with open('../data_clean/real_X_test.txt','w', encoding='utf-8') as file:
     for line in real_X_test: 
         file.write(line + "\n")
     file.close()
+    
+    
+# STEMMED     
+with open('../data_clean/X_train_STEM.txt','w', encoding='utf-8') as file: 
+    for line in X_train_stem: 
+        file.write(line + "\n")
+    file.close()
+    
+with open('../data_clean/X_test_STEM.txt','w', encoding='utf-8') as file: 
+    for line in X_test_stem: 
+        file.write(line + "\n")
+    file.close()  
+    
+with open('../data_clean/real_X_train_STEM.txt','w', encoding='utf-8') as file: 
+    for line in real_X_train_stem: 
+        file.write(line + "\n")
+    file.close()
+    
+with open('../data_clean/real_X_test_STEM.txt','w', encoding='utf-8') as file: 
+    for line in real_X_test_stem: 
+        file.write(line + "\n")
+    file.close()
+
+# TARGETS    
+with open('../data_clean/y_train.txt','w', encoding='utf-8') as file: 
+    for line in y_train: 
+        file.write(str(line) + "\n")
+    file.close()
+    
+with open('../data_clean/y_test.txt','w', encoding='utf-8') as file: 
+    for line in y_test: 
+        file.write(str(line) + "\n")
+    file.close()
+
 
 with open('../data_clean/real_y_train.txt','w', encoding='utf-8') as file: 
     for line in real_y_train: 
         file.write(line + "\n")
     file.close()
-
