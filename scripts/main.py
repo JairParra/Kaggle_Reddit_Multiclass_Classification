@@ -57,29 +57,51 @@ from sklearn.metrics import accuracy_score, confusion_matrix
 
 ### 2. Load the clean data ### 
 
-with open("../data_clean/X_train.txt",'r',  encoding='utf-8') as file: 
+## Lemmatized version 
+#with open("../data_clean/X_train.txt",'r',  encoding='utf-8') as file: 
+#    X_train = file.readlines() 
+#    file.close() 
+#    
+#with open("../data_clean/X_test.txt",'r',  encoding='utf-8') as file: 
+#    X_test = file.readlines()
+#    file.close() 
+#    
+#with open("../data_clean/real_X_train.txt",'r',  encoding='utf-8') as file: 
+#    real_X_train = file.readlines() 
+#    file.close() 
+#    
+#with open("../data_clean/real_X_test.txt",'r',  encoding='utf-8') as file: 
+#    real_X_test = file.readlines() 
+#    file.close()   
+    
+    
+# Stemmed version  
+with open("../data_clean/X_train_STEM.txt",'r',  encoding='utf-8') as file: 
     X_train = file.readlines() 
     file.close() 
     
-with open("../data_clean/X_test.txt",'r',  encoding='utf-8') as file: 
+with open("../data_clean/X_test_STEM.txt",'r',  encoding='utf-8') as file: 
     X_test = file.readlines()
     file.close() 
     
+with open("../data_clean/real_X_train_STEM.txt",'r',  encoding='utf-8') as file: 
+    real_X_train = file.readlines() 
+    file.close() 
+    
+with open("../data_clean/real_X_test_STEM.txt",'r',  encoding='utf-8') as file: 
+    real_X_test = file.readlines() 
+    file.close()   
+    
+    
+# TAGETS
 with open("../data_clean/y_train.txt",'r',  encoding='utf-8') as file: 
     y_train = [y[:-1] for y in file.readlines()]
     file.close() 
     
 with open("../data_clean/y_test.txt",'r',  encoding='utf-8') as file: 
     y_test = [y[:-1] for y in file.readlines()]
-    file.close() 
-  
-with open("../data_clean/real_X_train.txt",'r',  encoding='utf-8') as file: 
-    real_X_train = file.readlines() 
-    file.close() 
-    
-with open("../data_clean/real_X_test.txt",'r',  encoding='utf-8') as file: 
-    real_X_test = file.readlines() 
-    file.close()   
+    file.close()    
+
     
 with open("../data_clean/real_y_train.txt",'r',  encoding='utf-8') as file: 
     real_y_train = [y[:-1] for y in file.readlines()] 
@@ -111,6 +133,9 @@ f_num2lab = lambda x: num_to_label[x]
 # and test set, so there is no actual accuracy except for cross-validation. 
 # This chunk of code will also output the predictions that will be submitted to Kaggle. 
 
+
+## 1. Multinomial NB
+
 MN_pipe = Pipeline([('vect', CountVectorizer(min_df=5, 
                                                  max_df=0.95, 
                                                  ngram_range=(1,2), 
@@ -128,11 +153,12 @@ MN_pipe = Pipeline([('vect', CountVectorizer(min_df=5,
 # Fit the dataset with the full set
 MN_pipe.fit(real_X_train,real_y_train) 
 
+
 # Get predictions on the test set and save as csv
 
-real_y_pred = MN_pipe.predict(X_test) # get predictions
-real_y_pred_df = pd.DataFrame(np.zeros((7000,2)), columns=['Id','Category'])  # empty df template
-real_y_pred_df['Id'] = range(0,7000) # assign indices
+real_y_pred = MN_pipe.predict(real_X_test) # get predictions
+real_y_pred_df = pd.DataFrame(np.zeros((30000,2)), columns=['Id','Category'])  # empty df template
+real_y_pred_df['Id'] = range(0,30000) # assign indices
 real_y_pred_df['Category'] = real_y_pred # assign predictions 
 real_y_pred_df.to_csv('../data_clean/test.csv', index=False) # to save predictions in clean data 
 
@@ -142,6 +168,37 @@ MN_cv_score = round(MN_cv_scores.mean()*100, 4)
 
 print("Multinomial Naive Bayes cv-accuracy {}%".format(MN_cv_score))
 """ Multinomial Naive Bayes cv-accuracy 54.4314% """
+
+
+## 2. Logistic Regresssion ## 
+
+logreg_pipe = Pipeline([('vect', CountVectorizer(min_df=0, 
+                                                 max_df=0.95, 
+                                                 ngram_range=(1,2), 
+                                                 max_features = 20000, 
+                                                 )), # max size of vectors
+                 ('tfidf', TfidfTransformer(norm='l2', # normalize
+                                            use_idf = True, 
+                                            smooth_idf=True, 
+                                            sublinear_tf=False)), # smoothing 
+                 ('clf', LogisticRegression() )q
+                 ])
+                 
+                 
+logreg_pipe.fit(real_X_train, real_y_train)
+
+real_y_pred = logreg_pipe.predict(real_X_test) # get predictions 
+real_y_pred_df = pd.DataFrame(np.zeros((30000,2)), columns=['Id','Category'])  # empty df template
+real_y_pred_df['Id'] = range(0,30000) # assign indices
+real_y_pred_df['Category'] = real_y_pred # assign predictions 
+real_y_pred_df.to_csv('../data_clean/test.csv', index=False) # to save predictions in clean data 
+
+# Get the 5-folds cross_validation_score with the real training data
+logreg_cv_scores = cross_val_score(logreg_pipe, real_X_train, real_y_train, cv=10)
+logreg_cv_score = round(logreg_cv_scores.mean()*100, 4)
+
+print("Logistic Regression cv-accuracy {}%".format(logreg_cv_score))
+""" """
 
 
 # *****************************************************************************
@@ -237,7 +294,7 @@ plt.savefig('../figs/Multinomial_NB_Confussion_matrix.png')
 
 ### 4.3 Logistic Regression Classifier   
     
-logreg_pipe = Pipeline([('vect', CountVectorizer(min_df=5, 
+logreg_pipe = Pipeline([('vect', CountVectorizer(min_df=0, 
                                                  max_df=0.95, 
                                                  ngram_range=(1,2), 
                                                  max_features = 20000, 
@@ -245,7 +302,7 @@ logreg_pipe = Pipeline([('vect', CountVectorizer(min_df=5,
                  ('tfidf', TfidfTransformer(norm='l2', # normalize
                                             use_idf = True, 
                                             smooth_idf=True, 
-                                            sublinear_tf=True)), # smoothing 
+                                            sublinear_tf=False)), # smoothing 
                  ('clf', LogisticRegression() )
                  ])
                  
@@ -265,16 +322,16 @@ clf_accuracies['Logreg'] = logreg_acc
 
 # Set up the parameters to search 
 params = {"vect__ngram_range" :[(1,1),(1,2),(1,3)], 
-          "vect__max_df" : [0.9, 0.95, 1.0], 
-          "vect__min_df" : [10, 30, 50], 
-#          "vect__max_features" :[5000, 15000, None], 
+          "vect__max_df" : [0.93, 0.95, 0.97], 
+          "vect__min_df" : [0, 5,10], 
+          "vect__max_features" :[15000, 17000, 20000], 
           "tfidf__norm" : ['l1','l2'], 
           "tfidf__use_idf" :[True, False],
           "tfidf__smooth_idf":[True, False], 
           "tfidf__sublinear_tf":[True, False], 
           "clf__penalty": ['l1','l2'], 
-          "clf__C": [0.5,1.0,2.0], # inverse regularization parameter
-          "clf__max_iter": [100,200,300]
+          "clf__C": [1.0, 2.0, 2.5], # inverse regularization parameter
+          "clf__max_iter": [200,300, 400]
           }
           
 # Set up a random seed  
@@ -304,7 +361,7 @@ print("Best estimator: \n", best_estimator)
 best_estimators['LogisticRegression'] = best_estimator
 
 # Obtain accuracies
-logreg_acc = round(accuracy_score(y_pred, y_test)*100, 2)
+logreg_acc = round(accuracy_score(y_pred, y_test)*100, 4)
 print("Logistic Regression accuracy {}%".format(logreg_acc))
 clf_accuracies['Logreg'] = logreg_acc
 
@@ -315,7 +372,7 @@ df_cm = pd.DataFrame(confusion_mat, index=tags,
 plt.figure(3, figsize= (15,10)) 
 sns.heatmap(df_cm, annot=True, fmt='g') 
 plt.title("Logistic Regression Confusion Matrix")
-plt.savefig("../figs/Logistic Regression Confusion Matrix.png")
+plt.savefig("../figs/Logistic_Regression_Confusion_Matrix.png")
     
 # *******************************************************************************
 
@@ -627,4 +684,6 @@ ada_acc = round(accuracy_score(y_pred, y_test)*100, 2)
 print("AdaBoost accuracy {}%".format(ada_acc))
 print(classification_report(y_test, y_pred, target_names=tags_nums)) 
 clf_accuracies['Ada Boost acc'] = ada_acc
+
+
 
