@@ -47,6 +47,8 @@ https://www.cs.ubc.ca/~murphyk/Teaching/CS340-Fall07/NB.pdf
 ![](figs/Naive_Bayes_formulation.png)
 
 ## Dataset labels distribution  
+- We observe that the labels have a very well balanced distribution. 
+
 ![](figs/labels_countplot.png)
 
 ## Current Best Model: Scikit-learn Multinomial NB (Kaggle acc:54.6%, local cv acc: 54.43 %)
