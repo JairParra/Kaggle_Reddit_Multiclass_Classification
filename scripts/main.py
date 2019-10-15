@@ -110,6 +110,7 @@ with open("../data_clean/real_y_train.txt",'r',  encoding='utf-8') as file:
 tags_df = pd.read_csv('../data_clean/labels.txt', index_col=0) #tags dataframe
 tags = list(tags_df['0']) # tags list
 tags_nums = [str(tag) for tag in tags_df.index] # number encodings
+clf_accuracies = {}
 clf_cv_accuracies = {} # to store accuracies for each model 
 best_estimators = {} # to store best parameter configurations 
 
@@ -271,11 +272,11 @@ real_y_pred_df.to_csv('../data_clean/test.csv', index=False) # to save predictio
 
 # Get the 5-folds cross_validation_score with the real training data
 DT_cv_scores = cross_val_score(DT_pipe, real_X_train, real_y_train, cv=5)
-DT_cv_score = round(DT_pipe_cv_scores.mean()*100, 4)
+DT_cv_score = round(DT_cv_scores.mean()*100, 4)
 clf_cv_accuracies['Decision Tree'] = DT_cv_score
 
 
-print("Decision Trees score: {}%".format(DT_score))       
+print("Decision Trees score: {}%".format(DT_cv_score))       
 
 
 ###                      ###
@@ -580,7 +581,7 @@ y_pred = DT_pipe.predict(X_test)
 
 # Get the accuracy classification report 
 DT_acc = round(accuracy_score(y_pred, y_test)*100, 2)
-print("DEcision Tree accuracy {}%".format(DT_acc))
+print("Decision Tree accuracy {}%".format(DT_acc))
 print(classification_report(y_test, y_pred, target_names=tags_nums)) 
 clf_accuracies['Decision Tree acc'] = DT_acc
 
@@ -590,14 +591,16 @@ clf_accuracies['Decision Tree acc'] = DT_acc
 params = {"vect__ngram_range" :[(1,1),(1,2),(1,3)], 
           "vect__max_df" : [0.9, 0.95, 1.0], 
           "vect__min_df" : [0.0, 0.05, 0.1], 
-          "vect__max_features" :[10000, 10000, 20000], 
+          "vect__max_features" :[10000, 15000, 20000], 
           "tfidf__norm" : ['l1','l2'], 
-          "tfidf__use_idf" :[True, False],  ### TODO: set up a grid-search for Decision tree 
-          "tfidf__smooth_idf":[True, False], #         hyperparameter tunning ### 
+          "tfidf__use_idf" :[True, False], 
+          "tfidf__smooth_idf":[True, False], 
           "tfidf__sublinear_tf":[True, False], 
           "clf__criterion": ["gini","entropy"], 
           "clf__max_features":[None, "auto","log2"], 
-          "clf__"
+          "clf__min_samples_split":[5,10,15], 
+          "clf__min_samples_leaf":[5,10,15], 
+          "clf__class_weright":["balanced", None]
           }
           
 
@@ -692,3 +695,7 @@ plt.savefig('../figs/Multinomial NB Confussion matrix.png')
 #print("AdaBoost accuracy {}%".format(ada_acc))
 #print(classification_report(y_test, y_pred, target_names=tags_nums)) 
 #clf_accuracies['Ada Boost acc'] = ada_acc
+
+
+
+
