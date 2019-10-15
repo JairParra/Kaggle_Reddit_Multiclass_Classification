@@ -555,12 +555,13 @@ plt.title("Linear Kernel SVM Confusion Matrix")
 
 
 # NOTE: This shit requires a lot of hyperparameter tunning  
-DT_pipe = Pipeline([('vect', CountVectorizer(min_df=5, 
-                                                 max_df=0.95, 
-                                                 ngram_range=(1,2), 
-#                                                 max_features = 20000, 
+DT_pipe = Pipeline([('vect', CountVectorizer(min_df=0.0, 
+                                                 max_df=0.9, 
+                                                 ngram_range=(1,1), 
+                                                max_features = 20000,
+                                                
                                                  )), # max size of vectors
-                 ('tfidf', TfidfTransformer(norm='l2', # normalize
+                 ('tfidf', TfidfTransformer(norm='l2', # normalizer
                                             use_idf = True, 
                                             smooth_idf=True, 
                                             sublinear_tf=True)), # smoothing 
@@ -569,7 +570,7 @@ DT_pipe = Pipeline([('vect', CountVectorizer(min_df=5,
                                                 min_samples_split=10, # min 10% 
                                                 min_samples_leaf=5, 
                                                 max_features=None, # consider all of them 
-                                                class_weight='balanced')), # approximatedly balanced
+                                                class_weight=None)), # approximatedly balanced
                  ])
                  
 
@@ -598,9 +599,9 @@ params = {"vect__ngram_range" :[(1,1),(1,2),(1,3)],
           "tfidf__sublinear_tf":[True, False], 
           "clf__criterion": ["gini","entropy"], 
           "clf__max_features":[None, "auto","log2"], 
-          "clf__min_samples_split":[5,10,15], 
-          "clf__min_samples_leaf":[5,10,15], 
-          "clf__class_weright":["balanced", None]
+          "clf__min_samples_split":[8,10,12], 
+          "clf__min_samples_leaf":[8,10,12], 
+          "clf__class_weight":["balanced", None]
           }
           
 
@@ -628,13 +629,13 @@ CV_report = classification_report(y_test, y_pred,
 
 # Obtain accuracies
 DT_acc = round(accuracy_score(y_pred, y_test)*100, 2)
-print("Multinomial Naive Bayes accuracy {}%".format(MN_acc))
-clf_accuracies['Stem Multinomial NB'] = MN_acc
+print("Decision Tree accuracy {}%".format(DT_acc))
+clf_accuracies['Decision Tree'] = DT_acc
 
 # Display reports 
 print("CV report: \n", CV_report)
 print("Best estimator: \n", best_estimator)
-best_estimators['MultinomialNB'] = best_estimator
+best_estimators['Decision Tree'] = best_estimator
 
 # Display confusion matrix 
 confusion_mat = confusion_matrix(y_test, y_pred, labels=tags_nums).tolist() 
@@ -642,8 +643,8 @@ df_cm = pd.DataFrame(confusion_mat, index=tags,
                      columns=tags) 
 plt.figure(2, figsize= (15,15)) 
 sns.heatmap(df_cm, annot=True, fmt='g') 
-plt.title("Multinomial NB Confussion matrix")
-plt.savefig('../figs/Multinomial NB Confussion matrix.png')
+plt.title("Decision Tree Confussion matrix")
+plt.savefig('../figs/Decision Tree Confussion matrix.png')
 
 
 
@@ -695,7 +696,5 @@ plt.savefig('../figs/Multinomial NB Confussion matrix.png')
 #print("AdaBoost accuracy {}%".format(ada_acc))
 #print(classification_report(y_test, y_pred, target_names=tags_nums)) 
 #clf_accuracies['Ada Boost acc'] = ada_acc
-
-
 
 
