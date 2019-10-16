@@ -181,6 +181,7 @@ class BernoulliNaiveBayes():
             - BernoulliNB.transform_parameters('vec'=CountVectorizer, 
                                                'tfidf'=TfidfTransformer, 
                                                'norm'=Normalizer) 
+                                               
         """
         
         transf = tranformer().fit(self.X) 
@@ -305,7 +306,7 @@ X_train = data_train_raw['comments']
 y_train = data_train_raw['subreddits']
 
 X_test = data_test_raw['comments']
-y_test=  data_test_raw['subreddits'] 
+y_test=  data_test_raw['subreddits']  
 
 # list of targets 
 targets = sorted(set(y_train))

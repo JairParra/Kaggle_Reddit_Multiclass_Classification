@@ -7,50 +7,49 @@
 # k = number of classes (k = 20 for this miniproject dataset)
 
 import numpy as np
+import pandas as pd
 
 class BernoulliNB():
     """Implementing a Bernoulli Naive Bayes model for multiclass classification from scratch"""
 
-    def __init__(self, data, k):
+    def __init__(self, X_train, y_train, k):
         """
         Constructor to create a new BernoulliNB instance
 
-        data        = matrix (numpy ndarray) of dataset with labels as the last column
+        X_train     = feature matrix (numpy ndarray) of dataset
+        y_train     = labels vector
         k           = number of classes in dataset
-        X           = matrix (numpy ndarray) of dataset with labels (last column) removed
-        y           = vector (numpy ndarray) of labels (last column of data)
+        X           = X_train
+        y           = y_train
         n           = number of training examples (= number of rows of X)
+        m           = number of features (= number of columns of X)
 
         """
-        self.data = data
+        self.X = X_train
+        self.y = y_train
         self.k = k
-        self.X = data[:,:-1]
-        self.y = data[:,-1]
-        self.n = self.X.shape[0]
-
+        self.n, self.m = self.X.shape
 
     def fit(self):
         """
         Fit training data and calculate 2 class variables:
 
-        1.  a list theta_k of prior values for each class --> P(y=i) for every class i
+        1.  (k,)-shaped numpy array theta_k of prior values for each class --> P(y=i) for every class i
         2.  kxm parameterMatrix (k rows, m columns) where each row is the conditional probability 
             of features in that class "how often is feature j equal to 1 for examples from class i?"
 
         Adapted from COMP 551 Fall 2019 Slides, Lecture 10, Page 4
         from https://cs.mcgill.ca/~wlh/comp551/slides/10-ensembles.pdf
         """
-        self.theta_k = []
+        self.theta_k = np.zeros(self.k)
         self.parameterMatrix = np.zeros(shape=(self.k,self.m))
 
         for i in range(self.k): #for each class:
             # we find the conditional probability for each feature given each class (theta_j_k) using np.mean)
 
             currentClassData = self.X[self.y == i]#select all rows belonging to class i
-            self.theta_k.append[(currentClassData.shape[0]/self.n)] #number of examples in class i / total # of rows
+            self.theta_k[i]= currentClassData.shape[0]/self.n #number of examples in class i / total # of rows
             self.parameterMatrix[i] = np.mean(currentClassData, axis=0) #update each row of the parameter matrix
-
-        self.theta_k = np.asarray(self.theta_k)[:,np.newaxis] #convert list into kx1 numpy array
 
 
     def predict(self, X_test):
@@ -71,7 +70,18 @@ class BernoulliNB():
         matrix = np.zeros(shape=(n,self.k))
 
         for i in range(n):
-            X = X_test[i,:] #take current row
-            matrix[i] = np.log(self.theta_k) + (np.log(self.parameterMatrix) @ X) + (np.log(1-self.parameterMatrix) @ (1-X))
-
+            X = X_test[i,:][:,np.newaxis] #take current row
+            matrix[i] = np.log(self.theta_k) + (np.log(self.parameterMatrix) @ X).flatten() + ( np.log(1-self.parameterMatrix) @ (1-X) ).flatten()
+            
         return np.argmax(matrix, axis=1)
+
+###### TESTING ##########
+
+# load training  data 
+X_train = pd.read_csv('../data_clean/X_train.txt', header=None)
+y_train = pd.read_csv('../data_clean/y_train.txt', header=None)
+
+# load testing data 
+X_test = pd.read_csv('../data_clean/X_test.txt', header=None)
+
+print(y_train)
