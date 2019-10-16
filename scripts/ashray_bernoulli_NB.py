@@ -47,8 +47,10 @@ class BernoulliNB():
             # we find the conditional probability for each feature given each class (theta_j_k) using np.mean)
 
             currentClassData = self.X[self.y == i]#select all rows belonging to class i
-            self.theta_k.append[(currentClassData.shape[0]/ self.n)] #number of examples in class i / total # of rows
+            self.theta_k.append[(currentClassData.shape[0]/self.n)] #number of examples in class i / total # of rows
             self.parameterMatrix[i] = np.mean(currentClassData, axis=0) #update each row of the parameter matrix
+
+        self.theta_k = np.asarray(self.theta_k)[:,np.newaxis] #convert list into kx1 numpy array
 
 
     def predict(self, X_test):
@@ -65,8 +67,11 @@ class BernoulliNB():
         this should return a nx1 vector of labels
 
         """
-
-
+        n = X_test.shape[0]
         matrix = np.zeros(shape=(n,self.k))
+
+        for i in range(n):
+            X = X_test[i,:] #take current row
+            matrix[i] = np.log(self.theta_k) + (np.log(self.parameterMatrix) @ X) + (np.log(1-self.parameterMatrix) @ (1-X))
 
         return np.argmax(matrix, axis=1)
