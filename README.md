@@ -42,7 +42,7 @@ https://www.cs.ubc.ca/~murphyk/Teaching/CS340-Fall07/NB.pdf
 
 ![](figs/labels_countplot.png)
 
-## Current Best Model: Scikit-learn Multinomial NB (Kaggle acc:54.6%, local cv acc: 54.43 %)
+## Current Best Model: Scikit-learn Multinomial NB (Kaggle acc: 55.15%, local cv acc: 54.94 %)
 
 - **Note:** This accuracy comes from the artificially split training and testing sets we created, i.e., using the actual training and test data, we further split it into `X_train` (63000 samples), `X_test` (7000 samples), `y_train` (63000 samples) and `y_test`(7000) samples.  
 
