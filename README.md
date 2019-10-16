@@ -8,24 +8,6 @@
 # Mini-Project 2: Kaggle Reddit multi-class classification
 - Project for implementing multi-output classification of reddit data. 
 
-## IMPORTANT/ANNOUNCEMENTS:  
-- Finish the whole thing tomorrow, including the report. 
-
-
-## TASKS: 
--The following are the task divisions. These will be updated accordingly. 
-
-### Jair: 
-- Finish the report
-
-### Ashray: 
-- **Finish Naive Bayes** 
-- **Finish the report**
-
-### Hamza: 
-- **Finish Naive Bayes** 
-- **Finish the report**
-
 ## Our paper: 
 - https://www.overleaf.com/6192466927dckyydkjvmct
 
@@ -42,9 +24,11 @@ https://www.cs.ubc.ca/~murphyk/Teaching/CS340-Fall07/NB.pdf
 
 ![](figs/labels_countplot.png)
 
-## Current Best Model: Scikit-learn Multinomial NB (Kaggle acc: 55.15%, local cv acc: 55.01 %)
+## Current Best Model: Scikit-learn Linear SVC (Kaggle acc: 56.04,%, local cv acc: 55.43 %)
 
-- **Note:** This accuracy comes from the artificially split training and testing sets we created, i.e., using the actual training and test data, we further split it into `X_train` (63000 samples), `X_test` (7000 samples), `y_train` (63000 samples) and `y_test`(7000) samples.  
+- **Note:** The following confussion matrices the original training data which we split it into `X_train` (63000 samples), `X_test` (7000 samples), `y_train` (63000 samples) and `y_test`(7000) samples.  Our second best model comes from the **Multinomial Naive Bayes classifier**. We display confussion matrices for both: 
+
+![](figs/Linear_SVC_Confussion_matrix.png)
 
 ![](figs/Multinomial_NB_Confussion_matrix.png)
 
