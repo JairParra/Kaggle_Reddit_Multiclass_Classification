@@ -57,40 +57,40 @@ from sklearn.metrics import accuracy_score, confusion_matrix
 
 ### 2. Load the clean data ### 
 
-## Lemmatized version 
-#with open("../data_clean/X_train.txt",'r',  encoding='utf-8') as file: 
-#    X_train = file.readlines() 
-#    file.close() 
-#    
-#with open("../data_clean/X_test.txt",'r',  encoding='utf-8') as file: 
-#    X_test = file.readlines()
-#    file.close() 
-#    
-#with open("../data_clean/real_X_train.txt",'r',  encoding='utf-8') as file: 
-#    real_X_train = file.readlines() 
-#    file.close() 
-#    
-#with open("../data_clean/real_X_test.txt",'r',  encoding='utf-8') as file: 
-#    real_X_test = file.readlines() 
-#    file.close()   
-    
-    
-# Stemmed version  
-with open("../data_clean/X_train_STEM.txt",'r',  encoding='utf-8') as file: 
-    X_train = file.readlines() 
+### Lemmatized version 
+with open("../data_clean/X_train.txt",'r',  encoding='utf-8') as file: 
+    X_train = [x[:-1] for x in file.readlines()] 
     file.close() 
     
-with open("../data_clean/X_test_STEM.txt",'r',  encoding='utf-8') as file: 
+with open("../data_clean/X_test.txt",'r',  encoding='utf-8') as file: 
     X_test = file.readlines()
     file.close() 
     
-with open("../data_clean/real_X_train_STEM.txt",'r',  encoding='utf-8') as file: 
+with open("../data_clean/real_X_train.txt",'r',  encoding='utf-8') as file: 
     real_X_train = file.readlines() 
     file.close() 
     
-with open("../data_clean/real_X_test_STEM.txt",'r',  encoding='utf-8') as file: 
+with open("../data_clean/real_X_test.txt",'r',  encoding='utf-8') as file: 
     real_X_test = file.readlines() 
     file.close()   
+    
+    
+### Stemmed version  
+#with open("../data_clean/X_train_STEM.txt",'r',  encoding='utf-8') as file: 
+#    X_train = file.readlines() 
+#    file.close() 
+#    
+#with open("../data_clean/X_test_STEM.txt",'r',  encoding='utf-8') as file: 
+#    X_test = file.readlines()
+#    file.close() 
+#    
+#with open("../data_clean/real_X_train_STEM.txt",'r',  encoding='utf-8') as file: 
+#    real_X_train = file.readlines() 
+#    file.close() 
+#    
+#with open("../data_clean/real_X_test_STEM.txt",'r',  encoding='utf-8') as file: 
+#    real_X_test = file.readlines() 
+#    file.close()   
     
     
 # TAGETS
@@ -138,16 +138,16 @@ f_num2lab = lambda x: num_to_label[x]
 ## 1. Multinomial NB##
 ###                ###
 
-MN_pipe = Pipeline([('vect', CountVectorizer(min_df=5, 
-                                                 max_df=0.95, 
-                                                 ngram_range=(1,2), 
-                                                 max_features = 20000, 
+MN_pipe = Pipeline([('vect', CountVectorizer(min_df=5, # 5
+                                                 max_df=0.95, # 0.95  
+                                                 ngram_range=(1,2), # 1,2
+                                                 max_features = 50000, # 40000
                                                  )), # max size of vectors
-                 ('tfidf', TfidfTransformer(norm='l2', # normalize
+                 ('tfidf', TfidfTransformer(norm='l2', # normalize 
                                             use_idf = True, 
                                             smooth_idf=True, 
-                                            sublinear_tf=True)), # smoothing 
-                 ('clf', MultinomialNB(alpha=1.0, 
+                                            sublinear_tf=False)), # smoothing 
+                 ('clf', MultinomialNB(alpha=1.0, # 1.0  
                                      fit_prior=True)),  
                  ])
                  
@@ -170,7 +170,7 @@ MN_cv_score = round(MN_cv_scores.mean()*100, 4)
 clf_cv_accuracies['Multinomial NB'] = MN_cv_score
 
 print("Multinomial Naive Bayes cv-accuracy {}%".format(MN_cv_score))
-""" Multinomial Naive Bayes cv-accuracy 54.4314% """
+""" Multinomial Naive Bayes cv-accuracy  55.0186%% """
 
 ###                       ###
 ## 2. Logistic Regresssion ## 
@@ -696,5 +696,9 @@ plt.savefig('../figs/Decision Tree Confussion matrix.png')
 #print("AdaBoost accuracy {}%".format(ada_acc))
 #print(classification_report(y_test, y_pred, target_names=tags_nums)) 
 #clf_accuracies['Ada Boost acc'] = ada_acc
+
+
+
+
 
 
