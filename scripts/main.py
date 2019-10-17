@@ -24,6 +24,7 @@ Created on Wed Oct  2 16:26:34 2019
 
 ### 1. Imports ### 
 
+import time
 import random 
 import numpy as np 
 import pandas as pd 
@@ -113,6 +114,7 @@ tags_nums = [str(tag) for tag in tags_df.index] # number encodings
 clf_accuracies = {}
 clf_cv_accuracies = {} # to store accuracies for each model 
 best_estimators = {} # to store best parameter configurations 
+running_times ={} # to save running times of fitting the models  
 
 # To convert back the prediction tags: 
 
@@ -141,19 +143,23 @@ f_num2lab = lambda x: num_to_label[x]
 MN_pipe = Pipeline([('vect', CountVectorizer(min_df=5, # 5
                                                  max_df=0.95, # 0.95  
                                                  ngram_range=(1,2), # 1,2
-                                                 max_features = 50000, # 40000
+                                                 max_features = 50000, # 50000
                                                  )), # max size of vectors
                  ('tfidf', TfidfTransformer(norm='l2', # normalize 
                                             use_idf = True, 
                                             smooth_idf=True, 
-                                            sublinear_tf=False)), # smoothing 
+                                            sublinear_tf=True)), # smoothing 
+                 ('norm', Normalizer(norm='l2')), # normalization 
                  ('clf', MultinomialNB(alpha=1.0, # 1.0  
                                      fit_prior=True)),  
                  ])
                  
 
 # Fit the dataset with the full set
+t0 = time.time()
 MN_pipe.fit(real_X_train,real_y_train) 
+t1 = time.time() 
+running_times['MultinomialNB'] = t1 - t0 
 
 
 # Get predictions on the test set and save as csv
@@ -165,7 +171,7 @@ real_y_pred_df['Category'] = real_y_pred # assign predictions
 real_y_pred_df.to_csv('../data_clean/test.csv', index=False) # to save predictions in clean data 
 
 # Get the 5-folds cross_validation_score with the real training data
-MN_cv_scores = cross_val_score(MN_pipe, real_X_train, real_y_train, cv=10)
+MN_cv_scores = cross_val_score(MN_pipe, real_X_train, real_y_train, cv=10) # 10-fold cross-validation
 MN_cv_score = round(MN_cv_scores.mean()*100, 4)
 clf_cv_accuracies['Multinomial NB'] = MN_cv_score
 
@@ -177,19 +183,27 @@ print("Multinomial Naive Bayes cv-accuracy {}%".format(MN_cv_score))
 ###                       ###
 
 logreg_pipe = Pipeline([('vect', CountVectorizer(min_df=0, 
-                                                 max_df=0.95, 
+                                                 max_df=0.97, 
                                                  ngram_range=(1,2), 
-                                                 max_features = 20000, 
+                                                 max_features = 40000, 
                                                  )), # max size of vectors
                  ('tfidf', TfidfTransformer(norm='l2', # normalize
                                             use_idf = True, 
-                                            smooth_idf=True, 
+                                            smooth_idf=False, 
                                             sublinear_tf=False)), # smoothing 
-                 ('clf', LogisticRegression() )q
+                 ('clf', LogisticRegression(C=1.0, 
+                                            class_weight=None, 
+                                            max_iter=400, 
+                                            multi_class='ovr', 
+                                            penalty='l2', 
+                                            solver='saga') )
                  ])
                  
-                 
+
+t0 = time.time()                 
 logreg_pipe.fit(real_X_train, real_y_train)
+t1 = time.time() 
+running_times['Logistic Regression'] = t1 - t0 
 
 real_y_pred = logreg_pipe.predict(real_X_test) # get predictions 
 real_y_pred_df = pd.DataFrame(np.zeros((30000,2)), columns=['Id','Category'])  # empty df template
@@ -198,33 +212,36 @@ real_y_pred_df['Category'] = real_y_pred # assign predictions
 real_y_pred_df.to_csv('../data_clean/test.csv', index=False) # to save predictions in clean data 
 
 # Get the 5-folds cross_validation_score with the real training data
-logreg_cv_scores = cross_val_score(logreg_pipe, real_X_train, real_y_train, cv=10)
+logreg_cv_scores = cross_val_score(logreg_pipe, real_X_train, real_y_train, cv=10) # takes some time
 logreg_cv_score = round(logreg_cv_scores.mean()*100, 4)
 clf_cv_accuracies['Logistic Regression'] =logreg_cv_score
-
-
 print("Logistic Regression cv-accuracy {}%".format(logreg_cv_score))
-""" """
+
+""" Logistic Regression cv-accuracy  54.02%% """
 
 ###             ###
-## 3. Linear SVM ##
+## 3. Linear SVM ##  # CURRENT BEST
 ###             ###
 
-linear_SVC_pipe = Pipeline([('vect', CountVectorizer(ngram_range = (1,1), # kinds of ngrams
+linear_SVC_pipe = Pipeline([ ('vect', CountVectorizer(ngram_range = (1,1), # kinds of ngrams
                                               max_df=1.0, # ignore corpus words
                                               min_df = 0.0,  # ignore low frequency words
-                                              max_features=10000)), # max size of vectors
-                 ('tfidf', TfidfTransformer(norm='l2', # normalize
+                                              max_features=50000)), # max size of vectors
+                             ('tfidf', TfidfTransformer(norm='l2', # normalize
                                             smooth_idf=True)), # smoothing 
-                 ('clf', LinearSVC(penalty='l2', # 
+                             ('clf', LinearSVC(penalty='l2', # regularization norm 
                                    loss='hinge', # hinge loss
                                    dual=True,  # dual formulation
-                                   C = 1.0, 
-                                   max_iter=3000) )
-                 ])
+                                   C = 1.0, # Penalty parameter on the error term 
+                                   max_iter=3000) ) # Max number of iters. until convergence
+                             ])
                  
-                 
-linear_SVC_pipe.fit(real_X_train, real_y_train)
+     
+t0 = time.time()            
+linear_SVC_pipe.fit(real_X_train, real_y_train) # fit and train the model 
+t1 = time.time() 
+running_times['Linear SVC'] = t1 - t0 
+
 
 real_y_pred = linear_SVC_pipe.predict(real_X_test) # get predictions 
 real_y_pred_df = pd.DataFrame(np.zeros((30000,2)), columns=['Id','Category'])  # empty df template
@@ -235,10 +252,77 @@ real_y_pred_df.to_csv('../data_clean/test.csv', index=False) # to save predictio
 # Get the 5-folds cross_validation_score with the real training data
 linear_SVC_cv_scores = cross_val_score(linear_SVC_pipe, real_X_train, real_y_train, cv=5)
 linear_SVC_cv_score = round(linear_SVC_cv_scores.mean()*100, 4)
-clf_cv_accuracies['Linear SVM'] = linear_cv_score
-
-
+clf_cv_accuracies['Linear SVM'] = linear_SVC_cv_score
 print("linear_SVC cv-accuracy {}%".format(linear_SVC_cv_score))
+
+""" Linear SVC cv-accuracy  55.4343%% """
+
+
+###########################
+###########################
+
+# ADA BOOST: An improvement from our best classifier
+
+
+## Transform the features into count features
+count_vect = CountVectorizer(ngram_range = (1,1), 
+                              max_df=1.0, # ignore corpus words
+                              min_df = 0.0,  # ignore low frequency words
+                              max_features=50000).fit(real_X_train) # fit input data 
+X_train_counts = count_vect.transform(real_X_train)# get train counts
+X_test_counts = count_vect.transform(real_X_test) # get test counts
+
+
+## Apply tfidf 
+tfidf_transformer = TfidfTransformer(norm='l2', # normalize
+                                            smooth_idf=True).fit(X_train_counts)
+X_train_tfidf = tfidf_transformer.transform(X_train_counts)
+X_test_tfidf = tfidf_transformer.transform(X_test_counts)
+
+## Normalization (L2)
+normalizer_transformer = Normalizer().fit(X=X_train_tfidf)
+X_train_normalized = normalizer_transformer.transform(X_train_tfidf)
+X_test_normalized = normalizer_transformer.transform(X_test_tfidf)
+
+# create the AdaBoost classifier
+ada = AdaBoostClassifier(base_estimator = LinearSVC(penalty='l2', # regularization norm 
+                                   loss='hinge', # hinge loss
+                                   dual=True,  # dual formulation
+                                   C = 1.0, # Penalty parameter on the error term 
+                                   max_iter=3000),
+                                   n_estimators=100, # a 100 of these mdfks
+                                   random_state=0, 
+                                   algorithm='SAMME') 
+
+# fit the trianing data to ADA
+t0 = time.time()
+ada.fit(X_train_normalized, real_y_train)
+t1 = time.time() 
+running_times['AdaBoost Linear SVC'] = t1 - t0 
+
+# obtain predictions
+y_pred = ada.predict(X_test_normalized)
+
+real_y_pred = ada.predict(real_X_test) # get predictions 
+real_y_pred_df = pd.DataFrame(np.zeros((30000,2)), columns=['Id','Category'])  # empty df template
+real_y_pred_df['Id'] = range(0,30000) # assign indices
+real_y_pred_df['Category'] = real_y_pred # assign predictions 
+real_y_pred_df.to_csv('../data_clean/test.csv', index=False) # to save predictions in clean data 
+
+
+# Get the 5-folds cross_validation_score with the real training data
+ada_linear_SVC_cv_scores = cross_val_score(ada, X_train_normalized, real_y_train, cv=5)
+ada_linear_SVC_cv_score = round(ada_linear_SVC_cv_scores.mean()*100, 4)
+clf_cv_accuracies['AdaBoost Linear SVM'] = ada_linear_SVC_cv_score
+print("AdaBoost linear_SVC cv-accuracy {}%".format(ada_linear_SVC_cv_score))
+
+""" AdaBoost Linear SVC cv-accuracy  55.4829%% """
+
+
+###########################
+###########################
+
+
 
 ###                 ###
 ## 4. Decision Tress ## 
@@ -246,8 +330,8 @@ print("linear_SVC cv-accuracy {}%".format(linear_SVC_cv_score))
 
 DT_pipe = Pipeline([('vect', CountVectorizer(min_df=5, 
                                                  max_df=0.95, 
-                                                 ngram_range=(1,2), 
-#                                                 max_features = 20000, 
+                                                 ngram_range=(1,1), 
+                                                 max_features = 50000, 
                                                  )), # max size of vectors
                  ('tfidf', TfidfTransformer(norm='l2', # normalize
                                             use_idf = True, 
@@ -256,13 +340,15 @@ DT_pipe = Pipeline([('vect', CountVectorizer(min_df=5,
                  ('clf', DecisionTreeClassifier(criterion='gini', 
                                                 splitter='best', 
                                                 min_samples_split=10, # min 10% 
-                                                min_samples_leaf=5, 
+                                                min_samples_leaf=10, 
                                                 max_features=None, # consider all of them 
                                                 class_weight='balanced')), # approximatedly balanced
                  ])
                  
-# trian the model 
+t0 = time.time()
 DT_pipe.fit(real_X_train, real_y_train)
+t1 = time.time() 
+running_times['Decision Trees'] = t1 - t0 
 
 real_y_pred = DT_pipe.predict(real_X_test) # get predictions 
 real_y_pred_df = pd.DataFrame(np.zeros((30000,2)), columns=['Id','Category'])  # empty df template
@@ -275,8 +361,9 @@ DT_cv_scores = cross_val_score(DT_pipe, real_X_train, real_y_train, cv=5)
 DT_cv_score = round(DT_cv_scores.mean()*100, 4)
 clf_cv_accuracies['Decision Tree'] = DT_cv_score
 
-
 print("Decision Trees score: {}%".format(DT_cv_score))       
+
+""" Decision Trees 31.16 %% """
 
 
 ###                      ###
@@ -303,7 +390,7 @@ print("Decision Trees score: {}%".format(DT_cv_score))
 MN_pipe = Pipeline([('vect', CountVectorizer(min_df=5, 
                                                  max_df=0.95, 
                                                  ngram_range=(1,2), 
-                                                 max_features = 20000, 
+                                                 max_features = 50000, 
                                                  )), # max size of vectors
                  ('tfidf', TfidfTransformer(norm='l2', # normalize
                                             use_idf = True, 
@@ -324,7 +411,7 @@ y_pred = MN_pipe.predict(X_test)
 MN_acc = round(accuracy_score(y_pred, y_test)*100, 4)
 print("Multinomial Naive Bayes accuracy {}%".format(MN_acc))
 print(classification_report(y_test, y_pred, target_names=tags)) 
-clf_accuracies['Stem Multinomial NB'] = MN_acc
+clf_accuracies['Lemma Multinomial NB'] = MN_acc
 
 ### 3.3.1 Hyperparameter tunning 
 
@@ -332,7 +419,7 @@ clf_accuracies['Stem Multinomial NB'] = MN_acc
 params = {"vect__ngram_range" :[(1,1),(1,2),(1,3)], 
           "vect__max_df" : [0.93, 0.95, 0.97], 
           "vect__min_df" : [5,20,50], 
-          "vect__max_features" :[10000, 20000, 30000], 
+          "vect__max_features" :[30000, 40000, 50000], 
           "tfidf__norm" : ['l1','l2'], 
           "tfidf__use_idf" :[True, False],
           "tfidf__smooth_idf":[True, False],
@@ -367,7 +454,7 @@ CV_report = classification_report(y_test, y_pred,
 # Obtain accuracies
 MN_acc = round(accuracy_score(y_pred, y_test)*100, 4)
 print("Multinomial Naive Bayes accuracy {}%".format(MN_acc))
-clf_accuracies['Stem Multinomial NB'] = MN_acc
+clf_accuracies['Lemma Multinomial NB'] = MN_acc
     
 # Display reports 
 print("CV report: \n", CV_report)
@@ -390,7 +477,7 @@ plt.savefig('../figs/Multinomial_NB_Confussion_matrix.png')
 logreg_pipe = Pipeline([('vect', CountVectorizer(min_df=0, 
                                                  max_df=0.95, 
                                                  ngram_range=(1,2), 
-                                                 max_features = 20000, 
+                                                 max_features = 50000, 
                                                  )), # max size of vectors
                  ('tfidf', TfidfTransformer(norm='l2', # normalize
                                             use_idf = True, 
@@ -417,14 +504,18 @@ clf_accuracies['Logreg'] = logreg_acc
 params = {"vect__ngram_range" :[(1,1),(1,2),(1,3)], 
           "vect__max_df" : [0.93, 0.95, 0.97], 
           "vect__min_df" : [0, 5,10], 
-          "vect__max_features" :[15000, 17000, 20000], 
+          "vect__max_features" :[30000, 40000, 50000], 
           "tfidf__norm" : ['l1','l2'], 
           "tfidf__use_idf" :[True, False],
           "tfidf__smooth_idf":[True, False], 
           "tfidf__sublinear_tf":[True, False], 
-          "clf__penalty": ['l1','l2'], 
+          "clf__penalty": ['l2'], 
           "clf__C": [1.0, 2.0, 2.5], # inverse regularization parameter
-          "clf__max_iter": [200,300, 400]
+          "clf__max_iter": [200,300, 400], 
+          "clf__fit_intercept":[True, False], 
+          "clf__class_weight":["balanced",None], 
+          "clf__solver":['newton-cg', 'lbfgs','saga'], 
+          "clf__multi_class":['ovr','multinomial','auto']
           }
           
 # Set up a random seed  
@@ -474,14 +565,14 @@ plt.savefig("../figs/Logistic_Regression_Confusion_Matrix.png")
 linear_SVC_pipe = Pipeline([('vect', CountVectorizer(ngram_range = (1,1), # kinds of ngrams
                                               max_df=1.0, # ignore corpus words
                                               min_df = 0.0,  # ignore low frequency words
-                                              max_features=10000)), # max size of vectors
+                                              max_features=50000)), # max size of vectors
                  ('tfidf', TfidfTransformer(norm='l2', # normalize
                                             smooth_idf=True)), # smoothing 
                  ('clf', LinearSVC(penalty='l2', # 
                                    loss='hinge', # hinge loss
                                    dual=True,  # dual formulation
                                    C = 1.0, 
-                                   max_iter=1000) )
+                                   max_iter=3000) )
                  ])
                  
 # Fit the dataset 
@@ -534,18 +625,22 @@ CV_report = classification_report(y_test, y_pred,
 
 print("CV report: \n", CV_report)
 print("Best Estimator: \n", best_estimator)
+best_estimators['Linear SVC'] = best_estimator
+
 
 linear_SVC_acc = round(accuracy_score(y_pred, y_test)*100, 2)
 print("Linear Kernel SVM accuracy {}%".format(linear_SVC_acc))
-clf_accuracies['Linear Kernel SVM'] = linear_SVC_acc
+clf_cv_accuracies['Linear Kernel SVM'] = linear_SVC_acc
+
 
 # Print confusion matrix 
 confusion_mat = confusion_matrix(y_test, y_pred, labels=tags_nums).tolist() 
 df_cm = pd.DataFrame(confusion_mat, index=tags, 
                      columns=tags) 
-plt.figure(4, figsize= (5,3)) 
+plt.figure(4, figsize= (15,10)) 
 sns.heatmap(df_cm, annot=True, fmt='g') 
 plt.title("Linear Kernel SVM Confusion Matrix")
+plt.savefig("../figs/Linear_SVC_Confussion_matrix.png")
 
     
 # *******************************************************************************
@@ -558,17 +653,18 @@ plt.title("Linear Kernel SVM Confusion Matrix")
 DT_pipe = Pipeline([('vect', CountVectorizer(min_df=0.0, 
                                                  max_df=0.9, 
                                                  ngram_range=(1,1), 
-                                                max_features = 20000,
+                                                max_features = 30000,
                                                 
                                                  )), # max size of vectors
                  ('tfidf', TfidfTransformer(norm='l2', # normalizer
                                             use_idf = True, 
                                             smooth_idf=True, 
                                             sublinear_tf=True)), # smoothing 
+                 ('norm', Normalizer(norm='l2')), # normalization 
                  ('clf', DecisionTreeClassifier(criterion='gini', 
                                                 splitter='best', 
                                                 min_samples_split=10, # min 10% 
-                                                min_samples_leaf=5, 
+                                                min_samples_leaf=10, 
                                                 max_features=None, # consider all of them 
                                                 class_weight=None)), # approximatedly balanced
                  ])
@@ -592,7 +688,7 @@ clf_accuracies['Decision Tree acc'] = DT_acc
 params = {"vect__ngram_range" :[(1,1),(1,2),(1,3)], 
           "vect__max_df" : [0.9, 0.95, 1.0], 
           "vect__min_df" : [0.0, 0.05, 0.1], 
-          "vect__max_features" :[10000, 15000, 20000], 
+          "vect__max_features" :[20000, 30000, 50000], 
           "tfidf__norm" : ['l1','l2'], 
           "tfidf__use_idf" :[True, False], 
           "tfidf__smooth_idf":[True, False], 
@@ -644,7 +740,7 @@ df_cm = pd.DataFrame(confusion_mat, index=tags,
 plt.figure(2, figsize= (15,15)) 
 sns.heatmap(df_cm, annot=True, fmt='g') 
 plt.title("Decision Tree Confussion matrix")
-plt.savefig('../figs/Decision Tree Confussion matrix.png')
+plt.savefig('../figs/Decision_Tree_Confussion_matrix.png')
 
 
 
@@ -670,35 +766,31 @@ plt.savefig('../figs/Decision Tree Confussion matrix.png')
 #                                            ))
 #                 ])
 #                 
-#        
-#        
-#count_vect = CountVectorizer().fit(X_train) # fit input data 
-#X_train_counts = count_vect.transform(X_train)# get train counts
-#X_test_counts = count_vect.transform(X_test) # get test counts
-#
-## apply tfidf 
-#tfidf_transformer = TfidfTransformer().fit(X_train_counts)
-#X_train_tfidf = tfidf_transformer.transform(X_train_counts)
-#X_test_tfidf = tfidf_transformer.transform(X_test_counts)
-#
-### Normalization (L2)
-#normalizer_transformer = Normalizer().fit(X=X_train_tfidf)
-#X_train_normalized = normalizer_transformer.transform(X_train_tfidf)
-#X_test_normalized = normalizer_transformer.transform(X_test_tfidf)
-#
-#ada = AdaBoostClassifier(n_estimators=100, random_state=0) 
-#ada.fit(X_train_normalized, y_train)
-#
-#y_pred = ada.predict(X_test_normalized)
-#
-## Get the accuracy classification report 
-#ada_acc = round(accuracy_score(y_pred, y_test)*100, 2)
-#print("AdaBoost accuracy {}%".format(ada_acc))
-#print(classification_report(y_test, y_pred, target_names=tags_nums)) 
-#clf_accuracies['Ada Boost acc'] = ada_acc
+        
+        
+count_vect = CountVectorizer().fit(X_train) # fit input data 
+X_train_counts = count_vect.transform(X_train)# get train counts
+X_test_counts = count_vect.transform(X_test) # get test counts
 
+# apply tfidf 
+tfidf_transformer = TfidfTransformer().fit(X_train_counts)
+X_train_tfidf = tfidf_transformer.transform(X_train_counts)
+X_test_tfidf = tfidf_transformer.transform(X_test_counts)
 
+## Normalization (L2)
+normalizer_transformer = Normalizer().fit(X=X_train_tfidf)
+X_train_normalized = normalizer_transformer.transform(X_train_tfidf)
+X_test_normalized = normalizer_transformer.transform(X_test_tfidf)
 
+ada = AdaBoostClassifier(n_estimators=100, random_state=0) 
+ada.fit(X_train_normalized, y_train)
 
+y_pred = ada.predict(X_test_normalized)
+
+# Get the accuracy classification report 
+ada_acc = round(accuracy_score(y_pred, y_test)*100, 2)
+print("AdaBoost accuracy {}%".format(ada_acc))
+print(classification_report(y_test, y_pred, target_names=tags_nums)) 
+clf_accuracies['Ada Boost acc'] = ada_acc
 
 
