@@ -37,6 +37,8 @@ class BernoulliNB():
         1.  (k,)-shaped numpy array theta_k of prior values for each class --> P(y=i) for every class i
         2.  kxm parameterMatrix (k rows, m columns) where each row is the conditional probability 
             of features in that class "how often is feature j equal to 1 for examples from class i?"
+            Calculated using a vectorized implementation by using np.mean to calculate the conditional 
+            probability matrix of features for each class
 
         Adapted from COMP 551 Fall 2019 Slides, Lecture 10, Page 4
         from https://cs.mcgill.ca/~wlh/comp551/slides/10-ensembles.pdf
@@ -58,6 +60,11 @@ class BernoulliNB():
         Returns a nx1 labels vector that assigns a class number (from 0 to k-1) for each row in X_test.
 
         Implementation details:
+
+        This is a vectorized implementation of calculating the probability of each test example belonging to
+        all k classes. After we calculate P(y=1|X), P(y=2|X), ..., P(y=k|X) we pick the class that has the highest
+        probability.
+
         -We're trying to calculate the probability of each test example (each row of X_test) belonging
         to class 1,2,3,..,k.
         -We can represent this as a 1xk row vector[ P(y=1|X) P(y=2|X) P(y=3|X) ... P(y=k|X) ]
@@ -65,12 +72,15 @@ class BernoulliNB():
         -After that, calculate the argmax for each row to find the class with the highest probability value,
         this should return a nx1 vector of labels
 
+        Adapted from COMP 551 Fall 2019 Slides, Lecture 10, Page 6
+        from https://cs.mcgill.ca/~wlh/comp551/slides/10-ensembles.pdf
+
         """
         n = X_test.shape[0]
         matrix = np.zeros(shape=(n,self.k))
 
         for i in range(n):
-            X = X_test[i,:][:,np.newaxis] #take current row
+            X = X_test[i,:][:,np.newaxis] #take current row, use np.newaxis to convert (k,) into (k,1) shape array
             matrix[i] = np.log(self.theta_k) + (np.log(self.parameterMatrix) @ X).flatten() + ( np.log(1-self.parameterMatrix) @ (1-X) ).flatten()
             
         return np.argmax(matrix, axis=1)
