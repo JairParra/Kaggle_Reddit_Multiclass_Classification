@@ -10,7 +10,10 @@ import numpy as np
 import pandas as pd
 
 class BernoulliNB():
-    """Implementing a Bernoulli Naive Bayes model for multiclass classification from scratch"""
+    """
+    Implementing a Bernoulli Naive Bayes model for multiclass classification from scratch
+    Parameters: X_train, y_train, k (# classes)
+    """
 
     def __init__(self, X_train, y_train, k):
         """
@@ -51,6 +54,14 @@ class BernoulliNB():
 
             currentClassData = self.X[self.y == i]#select all rows belonging to class i
             self.theta_k[i]= currentClassData.shape[0]/self.n #number of examples in class i / total # of rows
+
+            #### LAPLACE SMOOTHING ####
+            # add 2 rows so num of rows in class increase by 2 and num of rows where feature j is on increases by 1
+            ones = np.ones(shape=(1,self.m)) #row of ones
+            zeros = np.zeros(shape=(1,self.m)) #row of zeros
+            currentClassData = np.stack([currentClassData, ones, zeros]) #add these rows to currentClassData
+            #### LAPLACE SMOOTHING ####
+
             self.parameterMatrix[i] = np.mean(currentClassData, axis=0) #update each row of the parameter matrix
 
 
@@ -94,4 +105,7 @@ y_train = pd.read_csv('../data_clean/y_train.txt', header=None)
 # load testing data 
 X_test = pd.read_csv('../data_clean/X_test.txt', header=None)
 
-print(y_train)
+
+
+nb = BernoulliNB(X_train=X_train, y_train=y_train, k=20)
+nb.fit()
