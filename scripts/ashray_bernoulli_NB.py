@@ -11,7 +11,7 @@ import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 import re
 from sklearn.metrics import accuracy_score
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import cross_val_score
 
 class BernoulliNB():
     """
@@ -91,14 +91,9 @@ class BernoulliNB():
         from https://cs.mcgill.ca/~wlh/comp551/slides/10-ensembles.pdf
 
         """
-        n = X_test.shape[0]
-        matrix = np.zeros(shape=(n,self.k))
-
-        for i in range(n):
-            X = X_test[i,:][:,np.newaxis] #take current row, use np.newaxis to convert (k,) into (k,1) shape array
-            matrix[i] = np.log(self.theta_k) + (np.log(self.parameterMatrix) @ X).flatten() + ( np.log(1-self.parameterMatrix) @ (1-X) ).flatten()
-            
+        matrix = (X_test @ np.log(self.parameterMatrix.T)) + ((1-X_test)@(np.log(1-self.parameterMatrix.T))) + np.log(self.theta_k)
         return np.argmax(matrix, axis=1)
+
 
 ###### TESTING ##########
 
@@ -114,25 +109,25 @@ y_test = pd.read_csv('../data_clean/y_test.txt', header=None).to_numpy()
 def alpha(string):
     """return only alphabetic chars"""
     return re.sub("[^a-zA-Z]", " ", string)
-
 X_train.iloc[:,0] = X_train[0].apply(alpha)
 X_test.iloc[:,0] = X_test[0].apply(alpha)
 
 
+#one hot encoding
 vectorizer = CountVectorizer(max_features=5000, 
                             min_df=5, 
                             max_df=0.9,
                             binary=True)
-
 X_train = vectorizer.fit_transform(X_train[0]).A
 X_test = vectorizer.transform(X_test[0]).A
 
+#train model
 nb = BernoulliNB(X_train=X_train, y_train=y_train, k=20)
-
 nb.fit()
-y_pred = nb.predict(X_test)
-acc = accuracy_score(y_test, y_pred)
-print(acc)
+y_pred = nb.predict2(X_test)
+
+
+print(accuracy_score(y_test, y_pred))
 
 
 
