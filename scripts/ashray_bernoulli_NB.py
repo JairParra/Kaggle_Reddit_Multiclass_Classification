@@ -8,6 +8,10 @@
 
 import numpy as np
 import pandas as pd
+from sklearn.feature_extraction.text import CountVectorizer
+import re
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
 
 class BernoulliNB():
     """
@@ -52,14 +56,14 @@ class BernoulliNB():
         for i in range(self.k): #for each class:
             # we find the conditional probability for each feature given each class (theta_j_k) using np.mean)
 
-            currentClassData = self.X[self.y == i]#select all rows belonging to class i
+            currentClassData = self.X[(self.y==i).flatten(), :]#select all rows belonging to class i
             self.theta_k[i]= currentClassData.shape[0]/self.n #number of examples in class i / total # of rows
 
             #### LAPLACE SMOOTHING ####
             # add 2 rows so num of rows in class increase by 2 and num of rows where feature j is on increases by 1
             ones = np.ones(shape=(1,self.m)) #row of ones
             zeros = np.zeros(shape=(1,self.m)) #row of zeros
-            currentClassData = np.stack([currentClassData, ones, zeros]) #add these rows to currentClassData
+            currentClassData = np.vstack([currentClassData, ones, zeros]) #add these rows to currentClassData
             #### LAPLACE SMOOTHING ####
 
             self.parameterMatrix[i] = np.mean(currentClassData, axis=0) #update each row of the parameter matrix
@@ -100,12 +104,35 @@ class BernoulliNB():
 
 # load training  data 
 X_train = pd.read_csv('../data_clean/X_train.txt', header=None)
-y_train = pd.read_csv('../data_clean/y_train.txt', header=None)
+y_train = pd.read_csv('../data_clean/y_train.txt', header=None).to_numpy()
 
 # load testing data 
 X_test = pd.read_csv('../data_clean/X_test.txt', header=None)
+y_test = pd.read_csv('../data_clean/y_test.txt', header=None).to_numpy()
+
+#Some Data Cleaning
+def alpha(string):
+    """return only alphabetic chars"""
+    return re.sub("[^a-zA-Z]", " ", string)
+
+X_train.iloc[:,0] = X_train[0].apply(alpha)
+X_test.iloc[:,0] = X_test[0].apply(alpha)
 
 
+vectorizer = CountVectorizer(max_features=5000, 
+                            min_df=5, 
+                            max_df=0.9,
+                            binary=True)
+
+X_train = vectorizer.fit_transform(X_train[0]).A
+X_test = vectorizer.transform(X_test[0]).A
 
 nb = BernoulliNB(X_train=X_train, y_train=y_train, k=20)
+
 nb.fit()
+y_pred = nb.predict(X_test)
+acc = accuracy_score(y_test, y_pred)
+print(acc)
+
+
+
