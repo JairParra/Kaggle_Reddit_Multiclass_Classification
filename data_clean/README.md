@@ -2,8 +2,7 @@
 - Data that has been pre-processed. 
 - Note that the following train and test sets are actually further splits of the original labeled set we were given. 
 The actual test set has also been preprocessed, but before we use it to output the predictions, we will first test with 
-the new train and test sets , splitted at a ratio of 95:5 . When we finish model selection, we will retrain the best model 
-with the full data , and make predictions on the real training test set. 
+the new train and test sets , splitted at a ratio of 9:1 . Our best current preprocessed set is the lemmatized version with tokens removed according to their POS tag. 
 
 ## X_train (Size=63000)
 - artificial trianing set pre-processed using lemmatization 
