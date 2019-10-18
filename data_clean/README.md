@@ -37,7 +37,7 @@ with the full data , and make predictions on the real training test set.
 ## y_test (Size=7000) 
 - labels test set 
 
-## real_y_train (Size=30000) 
+## real_y_train (Size=70000) 
 - original labels test set 
 
 
