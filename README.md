@@ -9,7 +9,7 @@
 - Project for implementing multi-output classification of reddit data. 
 
 ## Our paper: 
-- https://www.overleaf.com/6192466927dckyydkjvmct
+- https://www.overleaf.com/read/vzgyfgcfjbzd
 
 ## Naive Bayes Formulation 
 See https://sklearn.org/modules/naive_bayes.html
