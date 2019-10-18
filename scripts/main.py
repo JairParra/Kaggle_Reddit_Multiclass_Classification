@@ -9,11 +9,11 @@ Created on Wed Oct  2 16:26:34 2019
 @ Hair Albeiro Parra Barrera 
 @ ID: 260738619 
 
-@ Ashray Malleshachari
+@ Ashray Mallesh
 @ ID: 260838256
     
-@ Hamza Rizwan
-@ ID: 260816900 
+@ Hamza Khan
+@ ID: 
 """
 
 # *****************************************************************************
@@ -58,22 +58,41 @@ from sklearn.metrics import accuracy_score, confusion_matrix
 
 ### 2. Load the clean data ### 
 
-### Lemmatized version 
-with open("../data_clean/X_train.txt",'r',  encoding='utf-8') as file: 
+#### Lemmatized version 
+#with open("../data_clean/X_train.txt",'r',  encoding='utf-8') as file: 
+#    X_train = [x[:-1] for x in file.readlines()] 
+#    file.close() 
+#    
+#with open("../data_clean/X_test.txt",'r',  encoding='utf-8') as file: 
+#    X_test = file.readlines()
+#    file.close() 
+#    
+#with open("../data_clean/real_X_train.txt",'r',  encoding='utf-8') as file: 
+#    real_X_train = file.readlines() 
+#    file.close() 
+#    
+#with open("../data_clean/real_X_test.txt",'r',  encoding='utf-8') as file: 
+#    real_X_test = file.readlines() 
+#    file.close()   
+    
+    
+### Lemmatized version 2 
+with open("../data_clean/X_train2.txt",'r',  encoding='utf-8') as file: 
     X_train = [x[:-1] for x in file.readlines()] 
     file.close() 
     
-with open("../data_clean/X_test.txt",'r',  encoding='utf-8') as file: 
+with open("../data_clean/X_test2.txt",'r',  encoding='utf-8') as file: 
     X_test = file.readlines()
     file.close() 
     
-with open("../data_clean/real_X_train.txt",'r',  encoding='utf-8') as file: 
+with open("../data_clean/real_X_train2.txt",'r',  encoding='utf-8') as file: 
     real_X_train = file.readlines() 
     file.close() 
     
-with open("../data_clean/real_X_test.txt",'r',  encoding='utf-8') as file: 
+with open("../data_clean/real_X_test2.txt",'r',  encoding='utf-8') as file: 
     real_X_test = file.readlines() 
-    file.close()   
+    file.close() 
+    
     
     
 ### Stemmed version  
@@ -91,7 +110,25 @@ with open("../data_clean/real_X_test.txt",'r',  encoding='utf-8') as file:
 #    
 #with open("../data_clean/real_X_test_STEM.txt",'r',  encoding='utf-8') as file: 
 #    real_X_test = file.readlines() 
-#    file.close()   
+#    file.close()  
+#    
+#    
+### Stemmed version  2
+#with open("../data_clean/X_train_STEM2.txt",'r',  encoding='utf-8') as file: 
+#    X_train = file.readlines() 
+#    file.close() 
+#    
+#with open("../data_clean/X_test_STEM2.txt",'r',  encoding='utf-8') as file: 
+#    X_test = file.readlines()
+#    file.close() 
+#    
+#with open("../data_clean/real_X_train_STEM2.txt",'r',  encoding='utf-8') as file: 
+#    real_X_train = file.readlines() 
+#    file.close() 
+#    
+#with open("../data_clean/real_X_test_STEM2.txt",'r',  encoding='utf-8') as file: 
+#    real_X_test = file.readlines() 
+#    file.close()  
     
     
 # TAGETS
@@ -102,7 +139,6 @@ with open("../data_clean/y_train.txt",'r',  encoding='utf-8') as file:
 with open("../data_clean/y_test.txt",'r',  encoding='utf-8') as file: 
     y_test = [y[:-1] for y in file.readlines()]
     file.close()    
-
     
 with open("../data_clean/real_y_train.txt",'r',  encoding='utf-8') as file: 
     real_y_train = [y[:-1] for y in file.readlines()] 
@@ -127,6 +163,30 @@ f_lab2num = lambda x: label_to_num[x]
 f_num2lab = lambda x: num_to_label[x]
 
 
+# apply last preprocessing steps to the test data as well!!! 
+
+## Transform the features into count features
+count_vect = CountVectorizer(ngram_range = (1,1), 
+                              max_df=1.0, # ignore corpus words
+                              min_df = 0.0,  # ignore low frequency words
+                              max_features=50000).fit(real_X_train) # fit input data 
+X_train_counts = count_vect.transform(real_X_train)# get train counts
+X_test_counts = count_vect.transform(real_X_test) # get test counts
+
+
+## Apply tfidf 
+tfidf_transformer = TfidfTransformer(norm='l2', # normalize
+                                            smooth_idf=True).fit(X_train_counts)
+X_train_tfidf = tfidf_transformer.transform(X_train_counts)
+X_test_tfidf = tfidf_transformer.transform(X_test_counts)
+
+## Normalization (L2)
+normalizer_transformer = Normalizer().fit(X=X_train_tfidf)
+X_train_normalized = normalizer_transformer.transform(X_train_tfidf)
+X_test_normalized = normalizer_transformer.transform(X_test_tfidf)
+
+
+
 # *****************************************************************************
 # *****************************************************************************
 
@@ -140,7 +200,8 @@ f_num2lab = lambda x: num_to_label[x]
 ## 1. Multinomial NB##
 ###                ###
 
-MN_pipe = Pipeline([('vect', CountVectorizer(min_df=5, # 5
+MN_pipe = Pipeline([
+                 ('vect', CountVectorizer(min_df=5, # 5
                                                  max_df=0.95, # 0.95  
                                                  ngram_range=(1,2), # 1,2
                                                  max_features = 50000, # 50000
@@ -172,7 +233,7 @@ real_y_pred_df.to_csv('../data_clean/test.csv', index=False) # to save predictio
 
 # Get the 5-folds cross_validation_score with the real training data
 MN_cv_scores = cross_val_score(MN_pipe, real_X_train, real_y_train, cv=10) # 10-fold cross-validation
-MN_cv_score = round(MN_cv_scores.mean()*100, 4)
+MN_cv_score = round(MN_cv_scores.mean()*100, 4) 
 clf_cv_accuracies['Multinomial NB'] = MN_cv_score
 
 print("Multinomial Naive Bayes cv-accuracy {}%".format(MN_cv_score))
@@ -205,7 +266,7 @@ logreg_pipe.fit(real_X_train, real_y_train)
 t1 = time.time() 
 running_times['Logistic Regression'] = t1 - t0 
 
-real_y_pred = logreg_pipe.predict(real_X_test) # get predictions 
+real_y_pred = logreg_pipe.predict(X_test) # get predictions 
 real_y_pred_df = pd.DataFrame(np.zeros((30000,2)), columns=['Id','Category'])  # empty df template
 real_y_pred_df['Id'] = range(0,30000) # assign indices
 real_y_pred_df['Category'] = real_y_pred # assign predictions 
@@ -224,16 +285,20 @@ print("Logistic Regression cv-accuracy {}%".format(logreg_cv_score))
 ###             ###
 
 linear_SVC_pipe = Pipeline([ ('vect', CountVectorizer(ngram_range = (1,1), # kinds of ngrams
-                                              max_df=1.0, # ignore corpus words
+                                              max_df = 0.1, # ignore corpus words 0.1??? 
                                               min_df = 0.0,  # ignore low frequency words
-                                              max_features=50000)), # max size of vectors
+                                              max_features=50000)), # max size of vectors 50 000 
                              ('tfidf', TfidfTransformer(norm='l2', # normalize
-                                            smooth_idf=True)), # smoothing 
+                                            smooth_idf=True, # smoothing
+                                            sublinear_tf=False, # not there before
+                                            use_idf=True)),  # True by default
                              ('clf', LinearSVC(penalty='l2', # regularization norm 
                                    loss='hinge', # hinge loss
                                    dual=True,  # dual formulation
-                                   C = 1.0, # Penalty parameter on the error term 
-                                   max_iter=3000) ) # Max number of iters. until convergence
+                                   C = 1.0, # Penalty parameter on the error term  1.0 
+                                   max_iter=3000, # 3000
+                                   multi_class='ovr', # default
+                                   fit_intercept=True) ) # fit interecept? 
                              ])
                  
      
@@ -255,7 +320,7 @@ linear_SVC_cv_score = round(linear_SVC_cv_scores.mean()*100, 4)
 clf_cv_accuracies['Linear SVM'] = linear_SVC_cv_score
 print("linear_SVC cv-accuracy {}%".format(linear_SVC_cv_score))
 
-""" Linear SVC cv-accuracy  55.4343%% """
+""" Linear SVC cv-accuracy  55.4671%% """
 
 
 ###########################
@@ -269,13 +334,16 @@ count_vect = CountVectorizer(ngram_range = (1,1),
                               max_df=1.0, # ignore corpus words
                               min_df = 0.0,  # ignore low frequency words
                               max_features=50000).fit(real_X_train) # fit input data 
+
+# Get counts 
 X_train_counts = count_vect.transform(real_X_train)# get train counts
 X_test_counts = count_vect.transform(real_X_test) # get test counts
 
-
 ## Apply tfidf 
 tfidf_transformer = TfidfTransformer(norm='l2', # normalize
-                                            smooth_idf=True).fit(X_train_counts)
+                                            smooth_idf=True, 
+                                            sublinear_tf = True, 
+                                            use_idf=True).fit(X_train_counts)
 X_train_tfidf = tfidf_transformer.transform(X_train_counts)
 X_test_tfidf = tfidf_transformer.transform(X_test_counts)
 
@@ -289,7 +357,8 @@ ada = AdaBoostClassifier(base_estimator = LinearSVC(penalty='l2', # regularizati
                                    loss='hinge', # hinge loss
                                    dual=True,  # dual formulation
                                    C = 1.0, # Penalty parameter on the error term 
-                                   max_iter=3000),
+                                   max_iter=3000, 
+                                   fit_intercept=True),
                                    n_estimators=100, # a 100 of these mdfks
                                    random_state=0, 
                                    algorithm='SAMME') 
@@ -300,10 +369,8 @@ ada.fit(X_train_normalized, real_y_train)
 t1 = time.time() 
 running_times['AdaBoost Linear SVC'] = t1 - t0 
 
-# obtain predictions
-y_pred = ada.predict(X_test_normalized)
 
-real_y_pred = ada.predict(real_X_test) # get predictions 
+real_y_pred = ada.predict(X_test_normalized) # get predictions 
 real_y_pred_df = pd.DataFrame(np.zeros((30000,2)), columns=['Id','Category'])  # empty df template
 real_y_pred_df['Id'] = range(0,30000) # assign indices
 real_y_pred_df['Category'] = real_y_pred # assign predictions 
@@ -316,7 +383,8 @@ ada_linear_SVC_cv_score = round(ada_linear_SVC_cv_scores.mean()*100, 4)
 clf_cv_accuracies['AdaBoost Linear SVM'] = ada_linear_SVC_cv_score
 print("AdaBoost linear_SVC cv-accuracy {}%".format(ada_linear_SVC_cv_score))
 
-""" AdaBoost Linear SVC cv-accuracy  55.4829%% """
+""" AdaBoost Linear SVC cv-accuracy  55.5157%% """
+"" ""
 
 
 ###########################
@@ -593,12 +661,16 @@ clf_accuracies['Linear Kernel SVM'] = linear_SVC_acc
 params = {"vect__ngram_range" :[(1,1),(1,2),(1,3)], 
           "vect__max_df" : [0.9, 0.95, 1.0], 
           "vect__min_df" : [0.0, 0.05, 0.1], 
-          "vect__max_features" :[8000, 9000, 10000], 
-          "tfidf__norm" : ['l1','l2'], 
+          "vect__max_features" :[40000, 50000, 60000], 
+          "tfidf__norm" : ['l2'], 
           "tfidf__use_idf" :[True, False],
           "tfidf__smooth_idf":[True, False], 
+          "tfidf__sublinear_tf":[True, False], 
+          "clf__loss":["hinge","squared_hinge"], 
           "clf__C": [1.0,2.0,3.0], 
           "clf__max_iter": [1000,2000,3000], 
+          "clf__fit_intercept":[True, False] , 
+          "clf__multi_class":['ovr','crammer_singer']
           }
           
 
@@ -612,7 +684,8 @@ random_search_linear_SVC = RandomizedSearchCV(linear_SVC_pipe,
                                         cv = 5, # 5  Cross folds
                                         verbose=10,  
                                         random_state = seed, 
-                                        n_iter = 10
+                                        n_iter = 10, 
+                                        n_jobs = -1
                                         )
 
 random_search_linear_SVC.fit(X_train, y_train) 
@@ -745,52 +818,6 @@ plt.savefig('../figs/Decision_Tree_Confussion_matrix.png')
 
 
 # ******************************************************************************
-#   
-#### 4.1 AdaBoost Decision Tree CLassifier ### 
-#
-## NOTE: This shit requires a lot of hyperparameter tunning  
-#
-#Ada_pipe = Pipeline([('vect', CountVectorizer(min_df=5, 
-#                                                 max_df=0.95, 
-#                                                 ngram_range=(1,2), 
-##                                                 max_features = 20000, 
-#                                                 )), # max size of vectors
-#                 ('tfidf', TfidfTransformer(norm='l2', # normalize
-#                                            use_idf = True, 
-#                                            smooth_idf=True, 
-#                                            sublinear_tf=True)), # smoothing 
-#                 ('clf', AdaBoostClassifier(
-#                                            learning_rate=1.0, # default tradeoff  
-#                                            n_estimators=50, # max number of estimators
-#                                            algorithm='SAMME', # discrete ada boost
-#                                            ))
-#                 ])
-#                 
-        
-        
-count_vect = CountVectorizer().fit(X_train) # fit input data 
-X_train_counts = count_vect.transform(X_train)# get train counts
-X_test_counts = count_vect.transform(X_test) # get test counts
 
-# apply tfidf 
-tfidf_transformer = TfidfTransformer().fit(X_train_counts)
-X_train_tfidf = tfidf_transformer.transform(X_train_counts)
-X_test_tfidf = tfidf_transformer.transform(X_test_counts)
-
-## Normalization (L2)
-normalizer_transformer = Normalizer().fit(X=X_train_tfidf)
-X_train_normalized = normalizer_transformer.transform(X_train_tfidf)
-X_test_normalized = normalizer_transformer.transform(X_test_tfidf)
-
-ada = AdaBoostClassifier(n_estimators=100, random_state=0) 
-ada.fit(X_train_normalized, y_train)
-
-y_pred = ada.predict(X_test_normalized)
-
-# Get the accuracy classification report 
-ada_acc = round(accuracy_score(y_pred, y_test)*100, 2)
-print("AdaBoost accuracy {}%".format(ada_acc))
-print(classification_report(y_test, y_pred, target_names=tags_nums)) 
-clf_accuracies['Ada Boost acc'] = ada_acc
 
 
