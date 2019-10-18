@@ -157,7 +157,7 @@ normalizer = Normalizer(norm='l2') #normalizing doesn't seem to improve accuracy
 normalizer.fit_transform(X_train, y_train)
 normalizer.transform(X_test)
 
+nb = BernoulliNB()
+
 print(kfold_accuracy(model=nb, X=X_train, y=y_train))
-
-
 
