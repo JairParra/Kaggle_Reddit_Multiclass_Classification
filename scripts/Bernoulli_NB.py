@@ -33,7 +33,6 @@ import time
 import re
 import numpy as np
 import pandas as pd
-from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import Normalizer
 from crossvalidation import kfold_accuracy
@@ -46,12 +45,6 @@ class BernoulliNB():
     """
     Implementing a Bernoulli Naive Bayes model for multiclass classification from scratch
     """
-
-    def __init__(self):
-        """
-        Constructor to create a new BernoulliNB instance
-
-        """
 
     def fit(self, X_train, y_train, k):
         """
@@ -134,8 +127,6 @@ class BernoulliNB():
         return np.argmax(matrix, axis=1)
         
 # ********************************************************************************               
-        
-### TESTS ### 
 
 # load training  data 
 X_train = pd.read_csv('../data_clean/X_train.txt', header=None)
@@ -152,8 +143,8 @@ def alpha(string):
 X_train.iloc[:,0] = X_train[0].apply(alpha)
 X_test.iloc[:,0] = X_test[0].apply(alpha)
 
-#sklearn countvectorizer for one hot encoding
-vectorizer = CountVectorizer(max_features=None, 
+#sklearn tfidfvectorizer = countvectorizer + tfidftransformer
+vectorizer = TfidfVectorizer(max_features=5000, 
                             min_df=5, 
                             max_df=0.9,
                             binary=True)
@@ -162,7 +153,10 @@ vectorizer = CountVectorizer(max_features=None,
 X_train = vectorizer.fit_transform(X_train[0]).A
 X_test = vectorizer.transform(X_test[0]).A
 
-nb = BernoulliNB()
+normalizer = Normalizer(norm='l2') #normalizing doesn't seem to improve accuracy
+normalizer.fit_transform(X_train, y_train)
+normalizer.transform(X_test)
+
 print(kfold_accuracy(model=nb, X=X_train, y=y_train))
 
 
