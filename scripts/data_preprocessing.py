@@ -9,11 +9,11 @@ Created on Wed Oct  2 16:26:34 2019
 @ Hair Albeiro Parra Barrera 
 @ ID: 260738619 
 
-@ Ashray Malleshachari
+@ Ashray Mallesh
 @ ID: 260838256
     
-@ Hamza Rizwan
-@ ID: 260816900
+@ Hamza Khan
+@ ID: 
 """
 
 # *****************************************************************************
@@ -109,6 +109,7 @@ X_train, X_test, y_train, y_test = train_test_split(real_X_train,
     # https://spacy.io/api/annotation
     
 tags = ["PRON","DET","ADP","PUNCT","CONJ","CCONJ","SCONJ","NUM","SYM","X","PART","SPACE"] # tags to filter 
+tags_2 = ["NUM","SYM","X","PART","SPACE"] # tags to filter 
 stemmer = SnowballStemmer(language='english')   # Initialize English Snowball stemmer 
 stopwords = list(set(stw.words('english'))) # Obtain English stopwords 
 tokenizer = word_tokenize
@@ -123,6 +124,7 @@ def preprocess_texts(texts,
                      remove_stopwords=True, 
                      filter_all=True, 
                      filter_tags=[], 
+                     min_len = 1, 
                      verbose=False):
     
     if verbose: 
@@ -156,7 +158,8 @@ def preprocess_texts(texts,
                           if token.pos_ not in filter_tags 
                           and token.text not in stopwords 
                           and token.lemma_ not in stopwords
-                          and len(token.lemma_) > 1 
+                          and len(token.lemma_) > min_len
+                          and len(token.text) > min_len
                           and token.text.isalpha() ]
                           
             # apply all preprocessing with stemmin g
@@ -166,7 +169,8 @@ def preprocess_texts(texts,
                           if token.pos_ not in filter_tags 
                           and token.text not in stopwords
                           and token.lemma_ not in stopwords
-                          and len(token.lemma_) > 1 
+                          and len(token.lemma_) > min_len
+                          and len(token.text) > min_len
                           and token.text.isalpha() ]  
                 
             # else consider case by case 
@@ -212,11 +216,19 @@ sentences = ["""&gt;Oh man. All I know is that if you're story involves you bein
 Why not?""", 
 """👏 United 👏 in 👏 for 👏 Lukaku 👏 T H I C C 👏 and 👏 ready 👏 to 👏 score 👏 goals 👏 Chelsea 👏 still 👏 in 👏 for 👏 him 👏 too 👏 Everton 👏 want 👏 dat 👏 P 👏"""]
 
+sentences += list(data_train_raw['comments'][10:20])
+
+
 ex = [re.sub(r"[^a-zA-Z0-9]","",token) for token in tokenizer(sentences[0])] 
 print(ex)
 
+# lemmatize + all tags
 result = preprocess_texts(sentences,lemma_all = True,filter_tags=tags)
-print(result)
+print("Lemmatization + all tags: \n", result)
+
+# stemming + less tags 
+result = preprocess_texts(sentences,stem_all = True,filter_tags=tags_2)
+print("Lemmatization +  less tags: \n", result)
 
 print(len(sentences[1])) 
 print(type(result[0])) # type of each item in the list
@@ -224,17 +236,61 @@ print(type(result[0])) # type of each item in the list
 
 
 # Apply LEMMA preprocessing to featture train and test sets (SLOW!!!)
-X_train_lemma = preprocess_texts(X_train, lemma_all = True,filter_tags=tags)
-X_test_lemma = preprocess_texts(X_test, lemma_all = True,filter_tags=tags) 
 real_X_train_lemma = preprocess_texts(real_X_train, lemma_all = True, filter_tags=tags)
 real_X_test_lemma = preprocess_texts(real_X_test, lemma_all = True,filter_tags=tags) 
 
+X_train_lemma, X_test_lemma, y_train, y_test = train_test_split(real_X_train_lemma, 
+                                                     real_y_train, 
+                                                     train_size=0.9, 
+                                                     test_size=0.1, 
+                                                     shuffle=True, 
+                                                     random_state=42)
+
+# LEMMA with less restricted tag filter
+real_X_train_lemma2 = preprocess_texts(real_X_train, lemma_all = True, filter_tags=tags_2) 
+real_X_test_lemma2 = preprocess_texts(real_X_test, lemma_all = True,filter_tags=tags_2) 
+
+X_train_lemma2, X_test_lemma2, y_train, y_test = train_test_split(real_X_train_lemma2, 
+                                                     real_y_train, 
+                                                     train_size=0.9, 
+                                                     test_size=0.1, 
+                                                     shuffle=True, 
+                                                     random_state=42)
+
+
 # Apply STEM preprocessing to all of these 
-X_train_stem = preprocess_texts(X_train, stem_all = True,filter_tags=tags)
-X_test_stem = preprocess_texts(X_test, stem_all = True,filter_tags=tags) 
 real_X_train_stem = preprocess_texts(real_X_train, stem_all = True, filter_tags=tags)
 real_X_test_stem = preprocess_texts(real_X_test, stem_all = True,filter_tags=tags) 
 
+X_train_stem, X_test_stem, y_train, y_test = train_test_split(real_X_train_stem, 
+                                                     real_y_train, 
+                                                     train_size=0.9, 
+                                                     test_size=0.1, 
+                                                     shuffle=True, 
+                                                     random_state=42)
+
+
+# Apply STEM preprocessing to all of these 
+real_X_train_stem2 = preprocess_texts(real_X_train, stem_all = True, filter_tags=tags_2)
+real_X_test_stem2 = preprocess_texts(real_X_test, stem_all = True,filter_tags=tags_2) 
+
+
+X_train_stem2, X_test_stem2, y_train, y_test = train_test_split(real_X_train_stem2, 
+                                                     real_y_train, 
+                                                     train_size=0.9, 
+                                                     test_size=0.1, 
+                                                     shuffle=True, 
+                                                     random_state=42)
+
+
+### Bad examples removal 
+
+length_text = lambda x: len(x)
+df = pd.DataFrame(list(zip(real_X_train, real_y_train)), columns=['comments','subreddits'])
+df['length_comment'] = df['comments'].apply(length_text) # obtain length of each row 
+df_filtered = df.loc[df['length_comment'] > 2] # exclude rows with length less than 3 
+
+### 
 
 # NOTE: If you wish to make any changes, you have to make sure that you re-load the original 
 # data in memory once again. Failing to do so may cause unwanted bugs. 
@@ -282,8 +338,31 @@ with open('../data_clean/real_X_test.txt','w', encoding='utf-8') as file:
         file.write(line + "\n")
     file.close()
     
+# LEMMATIZED 2
+with open('../data_clean/X_train2.txt','w', encoding='utf-8') as file: 
+    for line in X_train_lemma2: 
+        file.write(line + "\n")
+    file.close()
     
-# STEMMED     
+with open('../data_clean/X_test2.txt','w', encoding='utf-8') as file: 
+    for line in X_test_lemma2: 
+        file.write(line + "\n")
+    file.close()  
+    
+with open('../data_clean/real_X_train2.txt','w', encoding='utf-8') as file: 
+    for line in real_X_train_lemma2: 
+        file.write(line + "\n")
+    file.close()
+    
+with open('../data_clean/real_X_test2.txt','w', encoding='utf-8') as file: 
+    for line in real_X_test_lemma2: 
+        file.write(line + "\n")
+    file.close()
+    
+    
+    
+    
+# STEMMED 1 
 with open('../data_clean/X_train_STEM.txt','w', encoding='utf-8') as file: 
     for line in X_train_stem: 
         file.write(line + "\n")
@@ -291,7 +370,7 @@ with open('../data_clean/X_train_STEM.txt','w', encoding='utf-8') as file:
     
 with open('../data_clean/X_test_STEM.txt','w', encoding='utf-8') as file: 
     for line in X_test_stem: 
-        file.write(line + "\n")
+        file.write(line + "\n") 
     file.close()  
     
 with open('../data_clean/real_X_train_STEM.txt','w', encoding='utf-8') as file: 
@@ -303,6 +382,28 @@ with open('../data_clean/real_X_test_STEM.txt','w', encoding='utf-8') as file:
     for line in real_X_test_stem: 
         file.write(line + "\n")
     file.close()
+    
+# STEMMED 2 
+with open('../data_clean/X_train_STEM2.txt','w', encoding='utf-8') as file: 
+    for line in X_train_stem2: 
+        file.write(line + "\n")
+    file.close()
+    
+with open('../data_clean/X_test_STEM2.txt','w', encoding='utf-8') as file: 
+    for line in X_test_stem2: 
+        file.write(line + "\n") 
+    file.close()  
+    
+with open('../data_clean/real_X_train_STEM2.txt','w', encoding='utf-8') as file: 
+    for line in real_X_train_stem2: 
+        file.write(line + "\n")
+    file.close()
+    
+with open('../data_clean/real_X_test_STEM2.txt','w', encoding='utf-8') as file: 
+    for line in real_X_test_stem2: 
+        file.write(line + "\n")
+    file.close()
+    
 
 # TARGETS    
 with open('../data_clean/y_train.txt','w', encoding='utf-8') as file: 
@@ -321,5 +422,6 @@ with open('../data_clean/real_y_train.txt','w', encoding='utf-8') as file:
     file.close()
     
 # ****************************************************************************
+
     
-### Second attempt: Word Embeddings ### 
+    
