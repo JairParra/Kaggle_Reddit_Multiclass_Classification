@@ -12,8 +12,9 @@
 - https://drive.google.com/file/d/1dRbLITMOx29PPVAf7L1EDnCv_AnGmk3J/view?usp=sharing
 
 ## Naive Bayes Formulation 
-See https://sklearn.org/modules/naive_bayes.html
-https://www.cs.ubc.ca/~murphyk/Teaching/CS340-Fall07/NB.pdf
+See
+- https://sklearn.org/modules/naive_bayes.html
+- https://www.cs.ubc.ca/~murphyk/Teaching/CS340-Fall07/NB.pdf
 
 ![](figs/Bernoulli_NB.png)
 
