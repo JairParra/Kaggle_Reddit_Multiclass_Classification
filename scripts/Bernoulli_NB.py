@@ -29,14 +29,14 @@ Created on Wed Oct  2 16:26:34 2019
 
 ### 1. Imports ### 
 
+import time
+import re
 import numpy as np
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
-import re
-from sklearn.metrics import accuracy_score
-from sklearn.model_selection import KFold
-
-
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.preprocessing import Normalizer
+from crossvalidation import kfold_accuracy
 
 # *****************************************************************************
 
@@ -45,29 +45,27 @@ from sklearn.model_selection import KFold
 class BernoulliNB():
     """
     Implementing a Bernoulli Naive Bayes model for multiclass classification from scratch
-    Parameters: X_train, y_train, k (# classes)
     """
 
-    def __init__(self, X_train, y_train, k):
+    def __init__(self):
         """
         Constructor to create a new BernoulliNB instance
 
+        """
+
+    def fit(self, X_train, y_train, k):
+        """
+
+        Parameters: 
         X_train     = feature matrix (numpy ndarray) of dataset
         y_train     = labels vector
         k           = number of classes in dataset
+
         X           = X_train
         y           = y_train
         n           = number of training examples (= number of rows of X)
         m           = number of features (= number of columns of X)
 
-        """
-        self.X = X_train
-        self.y = y_train
-        self.k = k
-        self.n, self.m = self.X.shape
-
-    def fit(self):
-        """
         Fit training data and calculate 2 class variables:
 
         1.  (k,)-shaped numpy array theta_k of prior values for each class --> P(y=i) for every class i
@@ -81,19 +79,24 @@ class BernoulliNB():
         at https://cs.mcgill.ca/~wlh/comp551/slides/10-ensembles.pdf. We've applied a column wise sum using np.mean
         to achieve the same result for each class.
         """
-        self.theta_k = np.zeros(self.k)
-        self.parameterMatrix = np.zeros(shape=(self.k,self.m))
 
-        for i in range(self.k): #for each class:
+        X = X_train
+        y = y_train
+        n,m = X.shape
+
+        self.theta_k = np.zeros(k)
+        self.parameterMatrix = np.zeros(shape=(k,m))
+
+        for i in range(k): #for each class:
             # we find the conditional probability for each feature given each class (theta_j_k) using np.mean)
 
-            currentClassData = self.X[(self.y==i).flatten(), :]#select all rows belonging to class i
-            self.theta_k[i]= currentClassData.shape[0]/self.n #number of examples in class i / total # of rows
+            currentClassData = X[ (y==i).flatten(), : ] # select all rows belonging to class i
+            self.theta_k[i]= currentClassData.shape[0]/n #number of examples in class i / total # of rows
 
             #### LAPLACE SMOOTHING ####
             # add 2 rows so numRows in each class increases by 2 and numRows in each class where feature j is on increases by 1
-            ones = np.ones(shape=(1,self.m)) #row of ones
-            zeros = np.zeros(shape=(1,self.m)) #row of zeros
+            ones = np.ones(shape=(1,m)) #row of ones
+            zeros = np.zeros(shape=(1,m)) #row of zeros
             currentClassData = np.vstack([currentClassData, ones, zeros]) #add ones and zeros rows to currentClassData
             #### LAPLACE SMOOTHING ####
 
@@ -134,11 +137,6 @@ class BernoulliNB():
         
 ### TESTS ### 
 
-# Temporary imports for testing purposes 
-
-from sklearn.feature_extraction.text import TfidfTransformer 
-from sklearn.preprocessing import Normalizer
-
 # load training  data 
 X_train = pd.read_csv('../data_clean/X_train.txt', header=None)
 y_train = pd.read_csv('../data_clean/y_train.txt', header=None).to_numpy()
@@ -154,8 +152,8 @@ def alpha(string):
 X_train.iloc[:,0] = X_train[0].apply(alpha)
 X_test.iloc[:,0] = X_test[0].apply(alpha)
 
-#sklearn vectorizer for one hot encoding
-vectorizer = CountVectorizer(max_features=5000, 
+#sklearn countvectorizer for one hot encoding
+vectorizer = CountVectorizer(max_features=None, 
                             min_df=5, 
                             max_df=0.9,
                             binary=True)
@@ -164,10 +162,8 @@ vectorizer = CountVectorizer(max_features=5000,
 X_train = vectorizer.fit_transform(X_train[0]).A
 X_test = vectorizer.transform(X_test[0]).A
 
-#train model
-nb = BernoulliNB(X_train=X_train, y_train=y_train, k=20)
-nb.fit()
+nb = BernoulliNB()
+print(kfold_accuracy(model=nb, X=X_train, y=y_train))
 
-y_pred = nb.predict(X_test)
-print(accuracy_score(y_test, y_pred))
+
 
