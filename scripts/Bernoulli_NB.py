@@ -3,7 +3,6 @@
 Created on Wed Oct  2 16:26:34 2019
 
 @ COMP 551: Applied Machine Learning (Winter 2019) 
-@ Mini-project 1 : Implementing Logistic Regression and LDA from scratch 
 # Team Members: 
 
 @ Hair Albeiro Parra Barrera 
