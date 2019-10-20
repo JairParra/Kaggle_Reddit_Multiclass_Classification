@@ -89,6 +89,34 @@ X_train, X_test, y_train, y_test = train_test_split(real_X_train,
                                                      shuffle=True, 
                                                      random_state=42)
 
+
+# Create a copy of these 
+X_train_raw, X_test_raw, y_train_raw, y_test_raw = X_train.copy(), X_test.copy(), y_train.copy(), y_test.copy()
+
+
+# Save raw data: 
+
+# RAW
+with open('../data_clean/X_train_raw.txt','w', encoding='utf-8') as file: 
+    for line in X_train_raw: 
+        file.write(line + "\n")
+    file.close()
+    
+with open('../data_clean/X_test_raw.txt','w', encoding='utf-8') as file: 
+    for line in X_test_raw: 
+        file.write(line + "\n")
+    file.close()  
+    
+with open('../data_clean/real_X_train_raw.txt','w', encoding='utf-8') as file: 
+    for line in real_X_train: 
+        file.write(line + "\n")
+    file.close()
+    
+with open('../data_clean/real_X_test_raw.txt','w', encoding='utf-8') as file: 
+    for line in real_X_test: 
+        file.write(line + "\n")
+    file.close()
+
 # *****************************************************************************
 
 ### 3. Data Preprocessing ### 
@@ -361,7 +389,6 @@ with open('../data_clean/real_X_test2.txt','w', encoding='utf-8') as file:
     
     
     
-    
 # STEMMED 1 
 with open('../data_clean/X_train_STEM.txt','w', encoding='utf-8') as file: 
     for line in X_train_stem: 
@@ -423,5 +450,10 @@ with open('../data_clean/real_y_train.txt','w', encoding='utf-8') as file:
     
 # ****************************************************************************
 
+    
+    
+    
+    
+    
     
     
