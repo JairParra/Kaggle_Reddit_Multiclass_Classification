@@ -38,6 +38,7 @@ from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import Normalizer 
 
+
 # Algorithms & Pipeline
 from sklearn.pipeline import Pipeline
 from sklearn.svm import LinearSVC, NuSVC
@@ -49,6 +50,7 @@ from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.multiclass import OneVsRestClassifier
 
 # Metrics & Model selection
+from sklearn.model_selection import train_test_split 
 from sklearn.model_selection import cross_val_score
 from sklearn.metrics import classification_report 
 from sklearn.metrics import accuracy_score, confusion_matrix 
@@ -163,7 +165,9 @@ f_lab2num = lambda x: label_to_num[x]
 f_num2lab = lambda x: num_to_label[x]
 
 
-# apply last preprocessing steps to the test data as well!!! 
+### *****************************************###
+### Extra pre-processing for Ada_boost Model ### 
+### *****************************************###
 
 ## Transform the features into count features
 count_vect = CountVectorizer(ngram_range = (1,1), 
@@ -186,11 +190,143 @@ X_train_normalized = normalizer_transformer.transform(X_train_tfidf)
 X_test_normalized = normalizer_transformer.transform(X_test_tfidf)
 
 
+### *****************************************###
+### Extra pre-processing for Ada_boost Model ### 
+### *****************************************###
+
 
 # *****************************************************************************
 # *****************************************************************************
 
-### *** BEST MODELS (in order) *** ### 
+### RAW TRY ###
+
+##                        ##
+## Step 1: Current best model: Multinomial NB   
+##                        ##
+
+# Load original data as a pandas dataframe
+data_train_raw = pd.read_csv('../data_raw/reddit_train.csv').drop('id',axis=1) 
+data_test_raw = pd.read_csv('../data_raw/reddit_test.csv').drop('id', axis=1)
+
+# extract the complete training data 
+real_X_train_raw = data_train_raw['comments'] 
+real_X_test_raw = data_test_raw['comments']
+
+
+# The data is randomly shuffled before splitting. 
+X_train_raw, X_test_raw, y_train, y_test = train_test_split(real_X_train_raw, 
+                                                     real_y_train, 
+                                                     train_size=0.9, 
+                                                     test_size=0.1, 
+                                                     shuffle=True, 
+                                                     random_state=42)
+
+
+# Create Pipeline only with the tfidf vectorizer and the classifier
+raw_MN_pipe = Pipeline([ ('vect', TfidfVectorizer(encoding='utf-8', 
+                                                      strip_accents='unicode', 
+                                                      lowercase=True, 
+                                                      stop_words='english', 
+                                                      ngram_range=(1,1), 
+                                                      max_df= 0.15, 
+                                                      min_df = 0, # 0
+                                                      max_features=70000, # 70000 
+                                                      norm='l2', 
+                                                      smooth_idf=True, 
+                                                      sublinear_tf=True, # False
+                                                      use_idf=True)), 
+                              ('clf', MultinomialNB(alpha=0.3, # 0.3
+                                     fit_prior=False)),   # True
+                             ])
+
+
+# time the code
+t0 = time.time()            
+raw_MN_pipe.fit(real_X_train_raw, real_y_train) # fit and train the model 
+t1 = time.time() 
+running_times['Raw features Multinomial NB'] = t1 - t0 
+""" 3.105113983154297"""
+
+
+# Get the 5-folds cross_validation_score with the real training data
+raw_MN_cv_scores = cross_val_score(raw_MN_pipe, real_X_train_raw, real_y_train, cv=5)
+raw_MN_cv_score = round(raw_MN_cv_scores.mean()*100, 4)
+clf_cv_accuracies['RAW Multinomal NB'] = raw_MN_cv_score
+print("RAW Multinomial NB cv-accuracy {}%".format(raw_MN_cv_score))
+
+"""Raw Multinomial NB cv acc: 57.10% """
+
+
+# obtain and save predictions 
+real_y_pred = raw_MN_pipe.predict(real_X_test_raw) # get predictions 
+real_y_pred_df = pd.DataFrame(np.zeros((30000,2)), columns=['Id','Category'])  # empty df template
+real_y_pred_df['Id'] = range(0,30000) # assign indices
+real_y_pred_df['Category'] = real_y_pred # assign predictions 
+real_y_pred_df.to_csv('../data_clean/test.csv', index=False) # to save predictions in clean data 
+
+
+##                        ##
+## Step 2: Hyperparameter Tunning Part : use fake training and testing sets
+## Use Grig Search
+##                        ##
+                             
+params = {"vect__encoding":['utf-8'],
+          "vect__strip_accents":['ascii', 'unicode'], 
+          "vect__lowercase":[True, False], 
+          "vect__stop_words":['english'], 
+          "vect__max_df" : [0.7, 0.8, 1.0], 
+          "vect__max_features" :[50000, 60000, 70000], 
+          "clf__alpha": [0.28,0.3,0.32], 
+          "clf__fit_prior" : [True, False] 
+          }
+
+
+# Set up a random seed  
+seed = 42 
+
+# Create a randoized search cross-validation with 5 folds 
+# and 10 repetitions. 
+random_search_MN = RandomizedSearchCV(raw_MN_pipe, 
+                                        param_distributions = params, 
+                                        cv = 5, # 5  Cross folds
+                                        verbose=10,  
+                                        random_state = seed, 
+                                        n_iter=10, 
+                                        n_jobs = -1 # run in parallel using all processors 
+                                        )
+
+# fit splitted data
+random_search_MN.fit(X_train_raw, y_train) 
+
+# Obtain report 
+best_estimator = random_search_MN.best_estimator_
+y_pred = list(random_search_MN.predict(X_test_raw) )
+CV_report = classification_report(y_test, y_pred, 
+                                 target_names=tags_nums) 
+
+# Obtain accuracies
+raw_MN_acc = round(accuracy_score(y_pred, y_test)*100, 4)
+print("Multinomial Naive Bayes accuracy {}%".format(raw_MN_acc))
+clf_accuracies['raw toy Multinomial NB'] = raw_MN_acc
+    
+# Display reports 
+print("CV report: \n", CV_report)
+print("Best estimator: \n", best_estimator)
+best_estimators['raw MultinomialNB'] = best_estimator
+
+# Display confusion matrix 
+confusion_mat = confusion_matrix(y_test, y_pred, labels=tags).tolist() 
+df_cm = pd.DataFrame(confusion_mat, index=tags, 
+                     columns=tags) 
+plt.figure(2, figsize= (15,15)) 
+sns.heatmap(df_cm, annot=True, fmt='g') 
+plt.title("Multinomial NB Confussion matrix")
+plt.savefig('../figs/Multinomial_NB_Confussion_matrix.png')                          
+
+# *****************************************************************************
+# *****************************************************************************
+
+### *** Models with extra-feature preprocessing *** ### 
 
 # NOTE: Here goes the code for the best model only, using the full training 
 # and test set, so there is no actual accuracy except for cross-validation. 
@@ -307,7 +443,7 @@ linear_SVC_pipe.fit(real_X_train, real_y_train) # fit and train the model
 t1 = time.time() 
 running_times['Linear SVC'] = t1 - t0 
 
-
+# obtain and save predictions 
 real_y_pred = linear_SVC_pipe.predict(real_X_test) # get predictions 
 real_y_pred_df = pd.DataFrame(np.zeros((30000,2)), columns=['Id','Category'])  # empty df template
 real_y_pred_df['Id'] = range(0,30000) # assign indices
@@ -818,6 +954,5 @@ plt.savefig('../figs/Decision_Tree_Confussion_matrix.png')
 
 
 # ******************************************************************************
-
 
 
