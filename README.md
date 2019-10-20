@@ -11,7 +11,7 @@
 - Project for implementing multi-output classification of reddit data. 
 
 ## Our paper: 
-- https://drive.google.com/file/d/1PQ20eYt0ywUC
+- https://drive.google.com/file/d/1PQ20eYt0ywUCgG7qd_r5dn_DSV9kVfRk/view?usp=sharing
 
 ## Naive Bayes Formulation 
 See
